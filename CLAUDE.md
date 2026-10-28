@@ -10,7 +10,8 @@ placeholders.
 
 - `engine/` — Rust Cargo workspace: `core` (rules, bots); later `wasm` (site) and `py` (lab, PyO3).
 - `lab/` — Python with uv: arena, PettingZoo environment, PPO, MLflow logging.
-- `web/` — Vite + React 19 + TanStack Router SPA, pnpm, PWA. Same house style as TriviaMore and Zuppapp: tabs +
+- `web/` — TanStack Start (Vite, React 19, TanStack Router) built as static files, pnpm, PWA; the Lab pages
+  (results, bot articles) with Fumadocs under `/lab`. Same house style as TriviaMore and Zuppapp: tabs +
   semicolons (Prettier), `@/` for `src/`.
 - `infra/` — Terraform for the Coolify static app, as in Zuppapp.
 
