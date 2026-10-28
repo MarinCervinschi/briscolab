@@ -6,6 +6,7 @@
 pub mod bot;
 pub mod card;
 pub mod card_set;
+pub mod duplicate;
 pub mod game;
 pub mod observation;
 pub mod player;
@@ -15,6 +16,7 @@ pub mod trick;
 pub use bot::{play_out, Bot, GreedyBot, HardBot, RandomBot};
 pub use card::{Card, Rank, Suit, DECK_SIZE, TOTAL_POINTS};
 pub use card_set::CardSet;
+pub use duplicate::play_duplicate;
 pub use game::{DeckError, Game, Outcome, PlayError, HAND_SIZE, STOCK_SIZE, TRICKS};
 pub use observation::Observation;
 pub use player::{Player, PLAYERS};

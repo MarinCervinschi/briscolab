@@ -141,3 +141,27 @@ fn hard_leads_its_weakest_card() {
     assert_eq!(HardBot.act(&obs("1c 4d 2s", "", "7s")), c("4d"));
     assert_eq!(HardBot.act(&obs("1c 3d 2s", "", "7s")), c("2s"));
 }
+
+#[test]
+fn a_duplicate_deal_plays_the_same_shuffle_with_seats_swapped() {
+    for seed in 0..50 {
+        let [as_p0, as_p1] = play_duplicate(seed, &mut HardBot, &mut GreedyBot).unwrap();
+
+        let mut game = Game::new(seed);
+        play_out(&mut game, &mut [&mut HardBot, &mut GreedyBot]).unwrap();
+        assert_eq!(as_p0, game.points()[0]);
+
+        let mut game = Game::new(seed);
+        play_out(&mut game, &mut [&mut GreedyBot, &mut HardBot]).unwrap();
+        assert_eq!(as_p1, game.points()[1]);
+    }
+}
+
+#[test]
+fn a_bot_against_itself_splits_a_duplicate_deal_evenly() {
+    // Both games are the same game, so the bot takes in one seat what it gives away in the other.
+    for seed in 0..50 {
+        let [as_p0, as_p1] = play_duplicate(seed, &mut GreedyBot, &mut GreedyBot).unwrap();
+        assert_eq!(u16::from(as_p0) + u16::from(as_p1), u16::from(TOTAL_POINTS));
+    }
+}
