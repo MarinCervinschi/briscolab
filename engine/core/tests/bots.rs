@@ -1,0 +1,107 @@
+//! The contract every bot honours, and the choices of the deterministic bots.
+
+use briscolab_core::*;
+
+fn c(s: &str) -> Card {
+    s.parse().unwrap()
+}
+
+fn set(cards: &str) -> CardSet {
+    cards.split_whitespace().map(c).collect()
+}
+
+type MakeBot = fn(u64) -> Box<dyn Bot>;
+
+/// The bots under contract, each built from a seed.
+fn bots() -> Vec<(&'static str, MakeBot)> {
+    vec![
+        ("random", |seed| Box::new(RandomBot::new(seed))),
+        ("greedy", |_| Box::new(GreedyBot)),
+    ]
+}
+
+/// Plays `seed`'s deal between two bots; `play_out` rejects any illegal card.
+fn play(make_a: MakeBot, make_b: MakeBot, seed: u64) -> Game {
+    let mut game = Game::new(seed);
+    let (mut a, mut b) = (make_a(seed), make_b(!seed));
+    play_out(&mut game, &mut [a.as_mut(), b.as_mut()]).unwrap();
+    game
+}
+
+#[test]
+fn every_bot_plays_only_legal_cards() {
+    for (name_a, a) in bots() {
+        for (name_b, b) in bots() {
+            for seed in 0..300 {
+                let game = play(a, b, seed);
+                assert!(game.is_over(), "{name_a} vs {name_b}, seed {seed}");
+            }
+        }
+    }
+}
+
+#[test]
+fn every_bot_is_reproducible_from_its_seed() {
+    for (name, bot) in bots() {
+        for seed in 0..100 {
+            assert_eq!(
+                play(bot, bot, seed),
+                play(bot, bot, seed),
+                "{name}, seed {seed}"
+            );
+        }
+    }
+}
+
+/// An observation with only what the greedy bot looks at: the hand, the table and the briscola.
+fn obs(hand: &str, table: &str, briscola: &str) -> Observation {
+    let table: Vec<Card> = table.split_whitespace().map(c).collect();
+    let me = if table.is_empty() {
+        Player::P0
+    } else {
+        Player::P1
+    };
+    Observation {
+        player: me,
+        hand: set(hand),
+        table,
+        played: CardSet::EMPTY,
+        taken: [CardSet::EMPTY; PLAYERS],
+        briscola: c(briscola),
+        briscola_drawn_by: None,
+        deck_len: 20,
+        hand_lens: [3, 3],
+        leader: Player::P0,
+        to_play: Some(me),
+        trick: 5,
+    }
+}
+
+#[test]
+fn greedy_leads_its_cheapest_card() {
+    // Briscola is spade.
+    assert_eq!(GreedyBot.act(&obs("1c 4d 2s", "", "7s")), c("4d"));
+    assert_eq!(GreedyBot.act(&obs("1c 10d 2s", "", "7s")), c("10d"));
+    // A briscola only when every card is one.
+    assert_eq!(GreedyBot.act(&obs("1s 3s 5s", "", "7s")), c("5s"));
+}
+
+#[test]
+fn greedy_takes_the_most_points_it_can() {
+    // An Asso led: the Tre di briscola takes 21 points, the 2 di briscola only 11.
+    assert_eq!(GreedyBot.act(&obs("2s 3s 4c", "1c", "7s")), c("3s"));
+    // The Tre of the suit led wins and adds its own 10 points.
+    assert_eq!(GreedyBot.act(&obs("3d 2s 4c", "10d", "7s")), c("3d"));
+}
+
+#[test]
+fn greedy_does_not_spend_a_briscola_on_an_empty_trick() {
+    // 4d and 2s both win the 2d for 0 points; the 4d is cheaper.
+    assert_eq!(GreedyBot.act(&obs("4d 2s 1c", "2d", "7s")), c("4d"));
+}
+
+#[test]
+fn greedy_gives_away_the_fewest_points_when_it_cannot_win() {
+    // Nothing beats the Asso di briscola: lose the 0-point card.
+    assert_eq!(GreedyBot.act(&obs("1c 10d 4b", "1s", "7s")), c("4b"));
+}

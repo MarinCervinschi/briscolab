@@ -12,7 +12,7 @@ pub mod player;
 pub mod rng;
 pub mod trick;
 
-pub use bot::{play_out, Bot, RandomBot};
+pub use bot::{play_out, Bot, GreedyBot, RandomBot};
 pub use card::{Card, Rank, Suit, DECK_SIZE, TOTAL_POINTS};
 pub use card_set::CardSet;
 pub use game::{DeckError, Game, Outcome, PlayError, HAND_SIZE, STOCK_SIZE, TRICKS};

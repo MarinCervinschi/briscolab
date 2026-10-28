@@ -20,13 +20,15 @@ placeholders.
 - `engine/core` (crate `briscolab-core`, no dependencies), one concept per module: `card.rs` (`Card`, `Suit`,
   `Rank`), `card_set.rs` (`CardSet`, a bitset over a `u64`), `player.rs`, `trick.rs` (`Trick`, `trick_winner`),
   `game.rs` (`Game`: deal, drawing, scoring, end), `observation.rs` (what one player knows), `rng.rs`
-  (xoshiro256** seeded by SplitMix64, same numbers on every platform), `bot.rs` (`Bot::act`, `RandomBot`,
-  `play_out`).
+  (xoshiro256** seeded by SplitMix64, same numbers on every platform), `bot/` (`Bot::act` and `play_out` in
+  `mod.rs`, one file per bot: `random.rs`, `greedy.rs`).
 - Seats are `Player::P0` and `P1`; `Game::new(seed)` has `P1` deal, so `P0` leads. `Game::from_deck` deals a
   given order, for hand-built tests.
 - `core` stays free of threads, clocks and OS randomness, so it builds for wasm32 and PyO3 unchanged.
 - Tests: `tests/rules.rs` (hand-checked positions and a hand-traced full game), `tests/properties.rs` (invariants
-  over thousands of seeded games, plus a recorded game that pins the generator).
+  over thousands of seeded games, plus a recorded game that pins the generator), `tests/bots.rs` (the contract
+  every bot honours, legal moves and reproducibility, plus each deterministic bot's choices). A new bot goes into
+  the list in `bots()` there.
 - Rust comes from Homebrew's keg-only `rustup`: put `/opt/homebrew/opt/rustup/bin` on `PATH`.
 
 ```bash
