@@ -1,0 +1,29 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# web
+node_modules
+dist
+*.local
+
+# engine
+target/
+*.wasm
+pkg/
+
+# lab
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+mlruns/
+runs/
+checkpoints/
+
+# Terraform: providers and local state stay out; the lock file is committed.
+infra/**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
