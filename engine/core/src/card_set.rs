@@ -46,6 +46,10 @@ impl CardSet {
         CardSet(self.0 | other.0)
     }
 
+    pub fn intersection(self, other: CardSet) -> CardSet {
+        CardSet(self.0 & other.0)
+    }
+
     pub fn difference(self, other: CardSet) -> CardSet {
         CardSet(self.0 & !other.0)
     }

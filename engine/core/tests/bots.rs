@@ -17,6 +17,7 @@ fn bots() -> Vec<(&'static str, MakeBot)> {
     vec![
         ("random", |seed| Box::new(RandomBot::new(seed))),
         ("greedy", |_| Box::new(GreedyBot)),
+        ("hard", |_| Box::new(HardBot)),
     ]
 }
 
@@ -53,7 +54,7 @@ fn every_bot_is_reproducible_from_its_seed() {
     }
 }
 
-/// An observation with only what the greedy bot looks at: the hand, the table and the briscola.
+/// An observation with only what the deterministic bots look at: the hand, the table and the briscola.
 fn obs(hand: &str, table: &str, briscola: &str) -> Observation {
     let table: Vec<Card> = table.split_whitespace().map(c).collect();
     let me = if table.is_empty() {
@@ -104,4 +105,39 @@ fn greedy_does_not_spend_a_briscola_on_an_empty_trick() {
 fn greedy_gives_away_the_fewest_points_when_it_cannot_win() {
     // Nothing beats the Asso di briscola: lose the 0-point card.
     assert_eq!(GreedyBot.act(&obs("1c 10d 4b", "1s", "7s")), c("4b"));
+}
+
+#[test]
+fn hard_takes_a_tre_di_briscola_with_the_asso() {
+    assert_eq!(HardBot.act(&obs("1s 4c 2d", "3s", "7s")), c("1s"));
+}
+
+#[test]
+fn hard_spares_its_weakest_card_on_a_briscola() {
+    assert_eq!(HardBot.act(&obs("1s 4c 3d", "2s", "7s")), c("4c"));
+    // Its weakest card that is not a briscola is a Tre: it gives the lowest briscola instead.
+    assert_eq!(HardBot.act(&obs("1c 3d 2s", "5s", "7s")), c("2s"));
+}
+
+#[test]
+fn hard_takes_a_carico_with_the_asso_or_a_briscola() {
+    assert_eq!(HardBot.act(&obs("1c 2s 4d", "3c", "7s")), c("1c"));
+    assert_eq!(HardBot.act(&obs("3c 2s 4d", "1c", "7s")), c("2s"));
+    // No briscola: the weakest card goes.
+    assert_eq!(HardBot.act(&obs("3c 4d 5b", "1c", "7s")), c("4d"));
+}
+
+#[test]
+fn hard_answers_with_its_strongest_card_of_the_suit_led() {
+    assert_eq!(HardBot.act(&obs("3c 2c 4b", "7c", "7s")), c("3c"));
+    // Even when that card cannot win, as in the Java bot.
+    assert_eq!(HardBot.act(&obs("2c 3d 4b", "7c", "7s")), c("2c"));
+    // No card of the suit led: spare, and a Tre is swapped for the lowest briscola.
+    assert_eq!(HardBot.act(&obs("1d 2s 3b", "7c", "7s")), c("2s"));
+}
+
+#[test]
+fn hard_leads_its_weakest_card() {
+    assert_eq!(HardBot.act(&obs("1c 4d 2s", "", "7s")), c("4d"));
+    assert_eq!(HardBot.act(&obs("1c 3d 2s", "", "7s")), c("2s"));
 }

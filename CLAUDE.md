@@ -21,7 +21,7 @@ placeholders.
   `Rank`), `card_set.rs` (`CardSet`, a bitset over a `u64`), `player.rs`, `trick.rs` (`Trick`, `trick_winner`),
   `game.rs` (`Game`: deal, drawing, scoring, end), `observation.rs` (what one player knows), `rng.rs`
   (xoshiro256** seeded by SplitMix64, same numbers on every platform), `bot/` (`Bot::act` and `play_out` in
-  `mod.rs`, one file per bot: `random.rs`, `greedy.rs`).
+  `mod.rs`, one file per bot: `random.rs`, `greedy.rs`, `hard.rs`).
 - Seats are `Player::P0` and `P1`; `Game::new(seed)` has `P1` deal, so `P0` leads. `Game::from_deck` deals a
   given order, for hand-built tests.
 - `core` stays free of threads, clocks and OS randomness, so it builds for wasm32 and PyO3 unchanged.
