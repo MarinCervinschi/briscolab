@@ -14,3 +14,4 @@ crate-type = ["cdylib"]
 [dependencies]
 briscolab-core = { path = "../core" }
 pyo3 = { version = "0.30.1", features = ["abi3-py313"] }
+rayon = "1"

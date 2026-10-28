@@ -7,15 +7,22 @@ from briscolab_lab.arena import Config, run, to_json
 
 
 def test_the_engine_knows_the_bots() -> None:
-    assert briscolab_engine.bot_names() == ["random", "greedy", "hard", "endgame"]
-    with pytest.raises(ValueError):
-        briscolab_engine.play_duplicate(0, "random", "nobody")
+    assert briscolab_engine.bot_names() == ["random", "greedy", "hard", "endgame", "pimc"]
+    for bad in ("nobody", "pimc:0", "pimc:x"):
+        with pytest.raises(ValueError):
+            briscolab_engine.play_duplicates([0], "random", bad)
 
 
 def test_a_bot_against_itself_splits_a_duplicate_deal() -> None:
-    for seed in range(20):
-        first, second = briscolab_engine.play_duplicate(seed, "greedy", "greedy")
+    for first, second in briscolab_engine.play_duplicates(list(range(20)), "greedy", "greedy"):
         assert first + second == 120
+
+
+def test_parallel_deals_come_back_in_the_order_of_the_seeds() -> None:
+    seeds = list(range(40))
+    together = briscolab_engine.play_duplicates(seeds, "pimc:3", "hard")
+    one_by_one = [briscolab_engine.play_duplicates([s], "pimc:3", "hard")[0] for s in seeds]
+    assert together == one_by_one
 
 
 def test_a_round_robin_is_reproducible() -> None:

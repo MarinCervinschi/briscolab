@@ -3,11 +3,13 @@
 mod endgame;
 mod greedy;
 mod hard;
+mod pimc;
 mod random;
 
 pub use endgame::EndgameBot;
 pub use greedy::GreedyBot;
 pub use hard::HardBot;
+pub use pimc::PimcBot;
 pub use random::RandomBot;
 
 use crate::card::Card;

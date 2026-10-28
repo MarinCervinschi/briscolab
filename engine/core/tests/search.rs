@@ -153,3 +153,27 @@ fn the_solver_has_nothing_to_say_once_the_game_is_over() {
     let game = random_game(3, |_, _| {});
     assert_eq!(solve(&game), None);
 }
+
+#[test]
+fn pimc_plays_exactly_once_the_deck_is_empty() {
+    for seed in 0..100 {
+        random_game(seed, |game, player| {
+            if game.deck_len() > 0 {
+                return;
+            }
+            let obs = game.observation(player);
+            assert_eq!(
+                PimcBot::new(5, seed).act(&obs),
+                EndgameBot.act(&obs),
+                "seed {seed}"
+            );
+        });
+    }
+}
+
+#[test]
+fn pimc_is_reproducible_from_its_seed() {
+    let obs = Game::new(11).observation(Player::P0);
+    let picks = |seed| PimcBot::new(20, seed).act(&obs);
+    assert_eq!(picks(7), picks(7));
+}

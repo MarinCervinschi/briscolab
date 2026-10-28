@@ -47,12 +47,9 @@ class Results:
 
 
 def play_pair(a: str, b: str, seeds: range) -> PairResult:
-    scores: list[float] = []
-    margins: list[float] = []
-    for seed in seeds:
-        first, second = briscolab_engine.play_duplicate(seed, a, b)
-        scores.append(deal_score(first, second))
-        margins.append(deal_margin(first, second))
+    games = briscolab_engine.play_duplicates(list(seeds), a, b)
+    scores = [deal_score(first, second) for first, second in games]
+    margins = [deal_margin(first, second) for first, second in games]
     return PairResult(
         a=a,
         b=b,
