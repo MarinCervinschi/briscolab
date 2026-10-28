@@ -1,0 +1,33 @@
+[project]
+name = "briscolab-lab"
+version = "0.1.0"
+description = "The Briscolab arena: duplicate deals between bots, with intervals and ratings."
+requires-python = ">=3.13"
+license = "MIT"
+dependencies = ["briscolab-engine"]
+
+[project.scripts]
+briscolab-arena = "briscolab_lab.__main__:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.9", "pyright[nodejs]>=1.1.390"]
+
+[tool.uv.sources]
+briscolab-engine = { path = "../engine/py" }
+
+[build-system]
+requires = ["uv_build>=0.10,<0.11"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.pyright]
+include = ["src", "tests"]
+typeCheckingMode = "strict"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -3,12 +3,12 @@
 A lab for two-player Briscola bots, with a site to play against them. Product and decisions: `SPEC.md`.
 The rules the engine implements: `docs/rules.md`.
 
-**Status (2026-10-28): milestone 1, the rules engine (`engine/core`).** `lab/`, `web/` and `infra/` are still
-placeholders.
+**Status (2026-10-28): milestone 2, the arena.** The engine (`engine/core`), its Python binding (`engine/py`)
+and a first arena (`lab/`) exist; MLflow logging is not wired yet. `web/` and `infra/` are placeholders.
 
 ## Layout
 
-- `engine/` — Rust Cargo workspace: `core` (rules, bots); later `wasm` (site) and `py` (lab, PyO3).
+- `engine/` — Rust Cargo workspace: `core` (rules, bots), `py` (PyO3 binding for the lab); later `wasm` (site).
 - `lab/` — Python with uv: arena, PettingZoo environment, PPO, MLflow logging.
 - `web/` — TanStack Start (Vite, React 19, TanStack Router) built as static files, pnpm, PWA; the Lab pages
   (results, bot articles) with Fumadocs under `/lab`. Same house style as TriviaMore and Zuppapp: tabs +
@@ -21,7 +21,10 @@ placeholders.
   `Rank`), `card_set.rs` (`CardSet`, a bitset over a `u64`), `player.rs`, `trick.rs` (`Trick`, `trick_winner`),
   `game.rs` (`Game`: deal, drawing, scoring, end), `observation.rs` (what one player knows), `rng.rs`
   (xoshiro256** seeded by SplitMix64, same numbers on every platform), `bot/` (`Bot::act` and `play_out` in
-  `mod.rs`, one file per bot: `random.rs`, `greedy.rs`, `hard.rs`).
+  `mod.rs`, one file per bot: `random.rs`, `greedy.rs`, `hard.rs`), `duplicate.rs` (`play_duplicate`: one shuffle,
+  seats swapped).
+- `engine/py` (crate `briscolab-py`, Python module `briscolab_engine`, built by maturin): translation only.
+  It chooses bots by name in `make_bot`; a new bot goes there and in `briscolab_engine.pyi`.
 - Seats are `Player::P0` and `P1`; `Game::new(seed)` has `P1` deal, so `P0` leads. `Game::from_deck` deals a
   given order, for hand-built tests.
 - `core` stays free of threads, clocks and OS randomness, so it builds for wasm32 and PyO3 unchanged.
@@ -37,6 +40,25 @@ cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt
 cargo build -p briscolab-core --target wasm32-unknown-unknown
+```
+
+## Lab
+
+- `lab/` is a uv project on Python 3.13 that depends on `engine/py` by path; `uv sync` rebuilds the binding when
+  the Rust sources change. Dev tools: pytest, ruff (lint and format, 100 columns), pyright in strict mode.
+- `stats.py` (score per duplicate deal, 95% intervals, Bradley-Terry ratings), `arena.py` (`Config`, `run`, the
+  report and the JSON results), `__main__.py` (the `briscolab-arena` command).
+- The unit of the arena is the duplicate deal: a bot's score is the mean of its two games (a draw counts half),
+  and a pair is decisive when the score's interval excludes 50%. Every pair plays the same seeds.
+- Published results go to `lab/results/` as JSON, written from a clean tree so `git_commit` has no `-dirty`.
+
+```bash
+cd lab
+uv sync
+uv run pytest
+uv run ruff check . && uv run ruff format --check .
+uv run pyright
+uv run briscolab-arena --deals 10000 --out results/<name>.json
 ```
 
 ## Rules that hold everywhere
