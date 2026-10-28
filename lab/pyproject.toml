@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "The Briscolab arena: duplicate deals between bots, with intervals and ratings."
 requires-python = ">=3.13"
 license = "MIT"
-dependencies = ["briscolab-engine"]
+dependencies = [
+    "briscolab-engine",
+    "mlflow-skinny>=3.17,<3.18",
+]
 
 [project.scripts]
 briscolab-arena = "briscolab_lab.__main__:main"

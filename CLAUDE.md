@@ -4,7 +4,7 @@ A lab for two-player Briscola bots, with a site to play against them. Product an
 The rules the engine implements: `docs/rules.md`.
 
 **Status (2026-10-28): milestone 2, the arena.** The engine (`engine/core`), its Python binding (`engine/py`)
-and a first arena (`lab/`) exist; MLflow logging is not wired yet. `web/` and `infra/` are placeholders.
+and the arena (`lab/`, logging to MLflow) exist; the search bots are next. `web/` and `infra/` are placeholders.
 
 ## Layout
 
@@ -47,7 +47,11 @@ cargo build -p briscolab-core --target wasm32-unknown-unknown
 - `lab/` is a uv project on Python 3.13 that depends on `engine/py` by path; `uv sync` rebuilds the binding when
   the Rust sources change. Dev tools: pytest, ruff (lint and format, 100 columns), pyright in strict mode.
 - `stats.py` (score per duplicate deal, 95% intervals, Bradley-Terry ratings), `arena.py` (`Config`, `run`, the
-  report and the JSON results), `__main__.py` (the `briscolab-arena` command).
+  report and the JSON results), `tracking.py` (one MLflow run per round robin, experiment `briscolab-arena`),
+  `__main__.py` (the `briscolab-arena` command).
+- MLflow runs on savvy, set up in `cervinschi-infra`, at `http://100.89.8.106:5000`: tailnet only, so Tailscale
+  must be on. The client (`mlflow-skinny`) stays on the server's minor version, 3.17. Artifacts go through the
+  server, so the lab needs only `MLFLOW_TRACKING_URI`, no keys. Logging is opt-in with `--mlflow`.
 - The unit of the arena is the duplicate deal: a bot's score is the mean of its two games (a draw counts half),
   and a pair is decisive when the score's interval excludes 50%. Every pair plays the same seeds.
 - Published results go to `lab/results/` as JSON, written from a clean tree so `git_commit` has no `-dirty`.
@@ -59,6 +63,7 @@ uv run pytest
 uv run ruff check . && uv run ruff format --check .
 uv run pyright
 uv run briscolab-arena --deals 10000 --out results/<name>.json
+MLFLOW_TRACKING_URI=http://100.89.8.106:5000 uv run briscolab-arena --deals 10000 --mlflow --run-name <name>
 ```
 
 ## Rules that hold everywhere
