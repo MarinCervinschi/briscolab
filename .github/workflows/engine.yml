@@ -20,6 +20,10 @@ jobs:
         with:
           components: clippy, rustfmt
           targets: wasm32-unknown-unknown
+      # The workspace includes the PyO3 crate, whose build needs a Python of at least its stable ABI.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: engine

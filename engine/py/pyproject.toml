@@ -1,0 +1,23 @@
+[build-system]
+requires = ["maturin>=1.15,<2"]
+build-backend = "maturin"
+
+[project]
+name = "briscolab-engine"
+description = "Python bindings of the Briscolab engine, for the lab."
+requires-python = ">=3.13"
+license = "MIT"
+dynamic = ["version"]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+
+[tool.uv]
+# Rebuild when the Rust sources change, not only this file.
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "Cargo.toml" },
+  { file = "src/**/*.rs" },
+  { file = "../core/Cargo.toml" },
+  { file = "../core/src/**/*.rs" },
+]
