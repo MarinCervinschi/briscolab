@@ -4,7 +4,7 @@ A lab for two-player Briscola bots, with a site to play against them. Product an
 The rules the engine implements: `docs/rules.md`.
 
 **Status (2026-10-28): milestone 2, the arena.** The engine (`engine/core`), its Python binding (`engine/py`)
-and the arena (`lab/`, logging to MLflow) exist; the search bots are next. `web/` and `infra/` are placeholders.
+and the arena (`lab/`, logging to MLflow) exist. Milestone 3, search: the endgame solver is in, PIMC is next. `web/` and `infra/` are placeholders.
 
 ## Layout
 
@@ -21,8 +21,11 @@ and the arena (`lab/`, logging to MLflow) exist; the search bots are next. `web/
   `Rank`), `card_set.rs` (`CardSet`, a bitset over a `u64`), `player.rs`, `trick.rs` (`Trick`, `trick_winner`),
   `game.rs` (`Game`: deal, drawing, scoring, end), `observation.rs` (what one player knows), `rng.rs`
   (xoshiro256** seeded by SplitMix64, same numbers on every platform), `bot/` (`Bot::act` and `play_out` in
-  `mod.rs`, one file per bot: `random.rs`, `greedy.rs`, `hard.rs`), `duplicate.rs` (`play_duplicate`: one shuffle,
-  seats swapped).
+  `mod.rs`, one file per bot: `random.rs`, `greedy.rs`, `hard.rs`, `endgame.rs`), `duplicate.rs`
+  (`play_duplicate`: one shuffle, seats swapped), `solver.rs` (`solve`: exact play once every card is known).
+- `Game::determinise(obs, rng)` builds a full game consistent with an observation, dealing the cards the player
+  cannot place at random; with the deck empty it is the real game. Search bots work on these, never on the real
+  `Game`.
 - `engine/py` (crate `briscolab-py`, Python module `briscolab_engine`, built by maturin): translation only.
   It chooses bots by name in `make_bot`; a new bot goes there and in `briscolab_engine.pyi`.
 - Seats are `Player::P0` and `P1`; `Game::new(seed)` has `P1` deal, so `P0` leads. `Game::from_deck` deals a
@@ -30,8 +33,9 @@ and the arena (`lab/`, logging to MLflow) exist; the search bots are next. `web/
 - `core` stays free of threads, clocks and OS randomness, so it builds for wasm32 and PyO3 unchanged.
 - Tests: `tests/rules.rs` (hand-checked positions and a hand-traced full game), `tests/properties.rs` (invariants
   over thousands of seeded games, plus a recorded game that pins the generator), `tests/bots.rs` (the contract
-  every bot honours, legal moves and reproducibility, plus each deterministic bot's choices). A new bot goes into
-  the list in `bots()` there.
+  every bot honours, legal moves and reproducibility, plus each deterministic bot's choices; a new bot goes into
+  the list in `bots()` there), `tests/search.rs` (determinisation shows the player exactly their observation; the
+  solver on a hand-traced endgame and its guarantee against any opponent).
 - Rust comes from Homebrew's keg-only `rustup`: put `/opt/homebrew/opt/rustup/bin` on `PATH`.
 
 ```bash

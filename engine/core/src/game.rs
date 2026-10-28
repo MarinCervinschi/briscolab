@@ -113,6 +113,48 @@ impl Game {
         })
     }
 
+    /// A full game consistent with everything `obs` knows; the cards it cannot place are dealt at random.
+    ///
+    /// The face-up briscola goes back under the deck or into the hand of whoever drew it, if it is still unplayed.
+    /// With the deck empty nothing is left to chance: the result is the real game, up to the order of the stock.
+    pub fn determinise(obs: &Observation, rng: &mut Rng) -> Game {
+        let me = obs.player.index();
+        let other = obs.player.next().index();
+        let first = obs.tricks.first().map_or(obs.leader, |t| t.leader);
+
+        let mut unknown: Vec<Card> = obs.unknown().iter().collect();
+        rng.shuffle(&mut unknown);
+        let known = obs.known_opponent_cards();
+        let (to_opponent, to_stock) = unknown.split_at(obs.hand_lens[other] - known.len());
+
+        let mut hands = [CardSet::EMPTY; PLAYERS];
+        hands[me] = obs.hand;
+        hands[other] = known.union(to_opponent.iter().copied().collect());
+
+        let drawn = STOCK_SIZE - obs.deck_len;
+        // Slots below `drawn` are never read again: they keep the briscola as filler.
+        let mut stock = [obs.briscola; STOCK_SIZE];
+        let deck_end = if obs.briscola_drawn_by.is_none() {
+            STOCK_SIZE - 1
+        } else {
+            STOCK_SIZE
+        };
+        stock[drawn..deck_end].copy_from_slice(to_stock);
+
+        Game {
+            dealer: first.after(PLAYERS - 1),
+            briscola: obs.briscola,
+            stock,
+            drawn,
+            briscola_drawn_by: obs.briscola_drawn_by,
+            hands,
+            taken: obs.taken,
+            leader: obs.leader,
+            table: obs.table.clone(),
+            tricks: obs.tricks.clone(),
+        }
+    }
+
     pub fn dealer(&self) -> Player {
         self.dealer
     }
@@ -207,7 +249,7 @@ impl Game {
             hand_lens: self.hands.map(CardSet::len),
             leader: self.leader,
             to_play: self.to_play(),
-            trick: self.tricks.len(),
+            tricks: self.tricks.clone(),
         }
     }
 

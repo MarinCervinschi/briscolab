@@ -11,9 +11,10 @@ pub mod game;
 pub mod observation;
 pub mod player;
 pub mod rng;
+pub mod solver;
 pub mod trick;
 
-pub use bot::{play_out, Bot, GreedyBot, HardBot, RandomBot};
+pub use bot::{play_out, Bot, EndgameBot, GreedyBot, HardBot, RandomBot};
 pub use card::{Card, Rank, Suit, DECK_SIZE, TOTAL_POINTS};
 pub use card_set::CardSet;
 pub use duplicate::play_duplicate;
@@ -21,4 +22,5 @@ pub use game::{DeckError, Game, Outcome, PlayError, HAND_SIZE, STOCK_SIZE, TRICK
 pub use observation::Observation;
 pub use player::{Player, PLAYERS};
 pub use rng::Rng;
+pub use solver::solve;
 pub use trick::{trick_winner, Trick};

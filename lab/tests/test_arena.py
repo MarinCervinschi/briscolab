@@ -7,7 +7,7 @@ from briscolab_lab.arena import Config, run, to_json
 
 
 def test_the_engine_knows_the_bots() -> None:
-    assert briscolab_engine.bot_names() == ["random", "greedy", "hard"]
+    assert briscolab_engine.bot_names() == ["random", "greedy", "hard", "endgame"]
     with pytest.raises(ValueError):
         briscolab_engine.play_duplicate(0, "random", "nobody")
 

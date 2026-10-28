@@ -1,16 +1,17 @@
 //! The engine as the Python module `briscolab_engine`: bots chosen by name and duplicate deals.
 
-use briscolab_core::{Bot, GreedyBot, HardBot, RandomBot};
+use briscolab_core::{Bot, EndgameBot, GreedyBot, HardBot, RandomBot};
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
-const BOT_NAMES: [&str; 3] = ["random", "greedy", "hard"];
+const BOT_NAMES: [&str; 4] = ["random", "greedy", "hard", "endgame"];
 
 fn make_bot(name: &str, seed: u64) -> PyResult<Box<dyn Bot>> {
     match name {
         "random" => Ok(Box::new(RandomBot::new(seed))),
         "greedy" => Ok(Box::new(GreedyBot)),
         "hard" => Ok(Box::new(HardBot)),
+        "endgame" => Ok(Box::new(EndgameBot)),
         _ => Err(PyValueError::new_err(format!(
             "unknown bot {name:?}, expected one of {BOT_NAMES:?}"
         ))),

@@ -1,9 +1,11 @@
 //! The bot interface, the bots, and the loop that plays a game between them.
 
+mod endgame;
 mod greedy;
 mod hard;
 mod random;
 
+pub use endgame::EndgameBot;
 pub use greedy::GreedyBot;
 pub use hard::HardBot;
 pub use random::RandomBot;

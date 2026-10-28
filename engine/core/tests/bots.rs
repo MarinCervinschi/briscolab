@@ -18,6 +18,7 @@ fn bots() -> Vec<(&'static str, MakeBot)> {
         ("random", |seed| Box::new(RandomBot::new(seed))),
         ("greedy", |_| Box::new(GreedyBot)),
         ("hard", |_| Box::new(HardBot)),
+        ("endgame", |_| Box::new(EndgameBot)),
     ]
 }
 
@@ -74,7 +75,7 @@ fn obs(hand: &str, table: &str, briscola: &str) -> Observation {
         hand_lens: [3, 3],
         leader: Player::P0,
         to_play: Some(me),
-        trick: 5,
+        tricks: Vec::new(),
     }
 }
 

@@ -3,6 +3,7 @@
 use crate::card::{Card, Suit};
 use crate::card_set::CardSet;
 use crate::player::{Player, PLAYERS};
+use crate::trick::Trick;
 
 /// One player's view of the game: what they can see or remember, and nothing else.
 ///
@@ -27,8 +28,8 @@ pub struct Observation {
     pub leader: Player,
     /// Whose turn it is, or `None` once the game is over.
     pub to_play: Option<Player>,
-    /// Finished tricks so far.
-    pub trick: usize,
+    /// The finished tricks, in order. Public, since tricks are played face up.
+    pub tricks: Vec<Trick>,
 }
 
 impl Observation {
