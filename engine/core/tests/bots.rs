@@ -20,6 +20,7 @@ fn bots() -> Vec<(&'static str, MakeBot)> {
         ("hard", |_| Box::new(HardBot)),
         ("endgame", |_| Box::new(EndgameBot)),
         ("pimc", |seed| Box::new(PimcBot::new(4, seed))),
+        ("ismcts", |seed| Box::new(IsmctsBot::new(8, seed))),
     ]
 }
 

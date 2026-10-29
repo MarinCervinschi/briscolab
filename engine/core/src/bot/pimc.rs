@@ -1,10 +1,8 @@
-use crate::bot::{Bot, EndgameBot, HardBot};
-use crate::card::{Card, TOTAL_POINTS};
+use crate::bot::{playout, Bot, EndgameBot};
+use crate::card::Card;
 use crate::game::Game;
 use crate::observation::Observation;
-use crate::player::Player;
 use crate::rng::Rng;
-use crate::solver::solve;
 
 /// Perfect-information Monte Carlo: tries each card on many deals consistent with what the bot knows and keeps the
 /// one that ends with the most points in total.
@@ -44,30 +42,16 @@ impl Bot for PimcBot {
         for card in obs.legal_moves() {
             let total = deals
                 .iter()
-                .map(|deal| u32::from(play_out_deal(deal, card, obs.player)))
+                .map(|deal| {
+                    let mut game = deal.clone();
+                    game.play(card).expect("a legal move");
+                    u32::from(playout(game, obs.player))
+                })
                 .sum();
             if best.is_none_or(|(_, b)| total > b) {
                 best = Some((card, total));
             }
         }
         best.expect("a legal move").0
-    }
-}
-
-/// The points `me` ends with when `card` is played on `deal`, then Hard plays both sides and the solver the end.
-fn play_out_deal(deal: &Game, card: Card, me: Player) -> u8 {
-    let mut game = deal.clone();
-    game.play(card).expect("a legal move");
-    while game.deck_len() > 0 {
-        let player = game
-            .to_play()
-            .expect("the game goes on while the deck lasts");
-        let card = HardBot.act(&game.observation(player));
-        game.play(card).expect("a legal move");
-    }
-    match solve(&game) {
-        None => game.points()[me.index()],
-        Some((_, points)) if game.to_play() == Some(me) => points,
-        Some((_, points)) => TOTAL_POINTS - points,
     }
 }

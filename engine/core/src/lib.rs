@@ -14,7 +14,7 @@ pub mod rng;
 pub mod solver;
 pub mod trick;
 
-pub use bot::{play_out, Bot, EndgameBot, GreedyBot, HardBot, PimcBot, RandomBot};
+pub use bot::{play_out, Bot, EndgameBot, GreedyBot, HardBot, IsmctsBot, PimcBot, RandomBot};
 pub use card::{Card, Rank, Suit, DECK_SIZE, TOTAL_POINTS};
 pub use card_set::CardSet;
 pub use duplicate::play_duplicate;

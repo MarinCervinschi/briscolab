@@ -1,4 +1,4 @@
-//! Determinisation and the exact endgame solver.
+//! Determinisation, the exact endgame solver, and the search bots built on them.
 
 use briscolab_core::*;
 
@@ -175,5 +175,29 @@ fn pimc_plays_exactly_once_the_deck_is_empty() {
 fn pimc_is_reproducible_from_its_seed() {
     let obs = Game::new(11).observation(Player::P0);
     let picks = |seed| PimcBot::new(20, seed).act(&obs);
+    assert_eq!(picks(7), picks(7));
+}
+
+#[test]
+fn ismcts_plays_exactly_once_the_deck_is_empty() {
+    for seed in 0..100 {
+        random_game(seed, |game, player| {
+            if game.deck_len() > 0 {
+                return;
+            }
+            let obs = game.observation(player);
+            assert_eq!(
+                IsmctsBot::new(5, seed).act(&obs),
+                EndgameBot.act(&obs),
+                "seed {seed}"
+            );
+        });
+    }
+}
+
+#[test]
+fn ismcts_is_reproducible_from_its_seed() {
+    let obs = Game::new(11).observation(Player::P0);
+    let picks = |seed| IsmctsBot::new(200, seed).act(&obs);
     assert_eq!(picks(7), picks(7));
 }
