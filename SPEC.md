@@ -75,6 +75,5 @@ The engine is the only place that knows the rules. The lab and the site never re
 ## Open questions
 
 - Sound and haptics: which events, and an off switch.
-- CI for `web/` (`pnpm test`); the engine's and the lab's run in `.github/workflows/`.
 - Whether the Lab articles get an Italian translation, and when.
 - Charts on the result pages: which library, and whether they are rendered at build time.

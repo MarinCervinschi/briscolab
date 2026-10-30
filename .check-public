@@ -3,3 +3,4 @@
 ignore *.lock
 ignore lab/results/*.json
 warn em dash
+ignore web/pnpm-lock.yaml

@@ -1,0 +1,19 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"site_description": "Gioca a briscola contro i bot e guarda come ragionano.",
+	"nav_play": "Gioca",
+	"nav_lab": "Lab",
+	"home_title": "Briscolab",
+	"home_lead": "Gioca a briscola contro i bot e guarda come ragionano: le mani che immaginano, le carte che pesano, il punteggio che si aspettano.",
+	"home_start": "Nuova partita",
+	"level_easy": "Facile",
+	"level_medium": "Medio",
+	"level_hard": "Difficile",
+	"level_expert": "Esperto",
+	"play_title": "Partita",
+	"play_soon": "Il tavolo arriva con il motore in WebAssembly.",
+	"back_home": "Torna all'inizio",
+	"language_switch": "English",
+	"not_found_title": "Questa pagina non c'è",
+	"not_found_lead": "Il link è sbagliato o la pagina è stata spostata."
+}

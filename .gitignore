@@ -27,3 +27,4 @@ infra/**/.terraform/
 *.tfstate
 *.tfstate.*
 *.tfplan
+web/src/paraglide/

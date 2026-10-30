@@ -75,8 +75,9 @@ Contrast on the dark theme (WCAG 2):
 - The face is `paper` with a 12–14 px radius. The artwork sits inside with a margin and `mix-blend-mode: multiply`,
   so its white ground becomes the paper colour.
 - The index (1–7, F, C, R) sits in two opposite corners in JetBrains Mono, the bottom one turned 180°.
-- The ace of denari carries the printer's mark ("T. DAL NEGRO TREVISO", "MADE IN ITALY", "531"). The site
-  covers it with paper before publishing the deck.
+- The scans carry the printer's marks: "T. DAL NEGRO TREVISO", "MADE IN ITALY" and "531" on the ace of denari, the
+  crowned "DAL NEGRO TREVISO" in the middle of the four of coppe and the four of denari. `web/scripts/clean-cards.mjs`
+  paints them out (the ring of the ace in plain yellow, the rest in white) before the cards go into `public/cards`.
 - The briscola under the deck lies sideways and carries a 2 px `signal` outline.
 
 ### Backs
@@ -98,6 +99,13 @@ on the technical plate.
 
 Every drawing comes from a fixed seed, so a back looks the same on every render. All backs share the outer card:
 14 px radius and a light rim on the top edge.
+
+## Icon
+
+Two cards after "Card" by wenwu zhang ([CC BY](https://www.behance.net/suiyuerugeca71)): cantaloupe behind,
+electric blue in front, and on the front card the search tree of the "Albero" back, with the line the bot keeps in
+orange. On midnight for the app icons, on nothing for the favicon. `pnpm icons` draws them; the credit goes on the
+credits page with the cards.
 
 ## The table
 

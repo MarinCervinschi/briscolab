@@ -4,8 +4,8 @@ A lab for two-player Briscola bots, with a site to play against them. Product an
 The rules the engine implements: `docs/rules.md`.
 
 **Status (2026-10-30): milestone 4, the site, tracked in epic #1 and its sub-issues.** The engine (`engine/core`), its Python binding (`engine/py`),
-the arena (`lab/`, logging to MLflow) and the search bots exist; PIMC is the champion, ISMCTS ties it. `web/` and
-`infra/` are placeholders.
+the arena (`lab/`, logging to MLflow) and the search bots exist; PIMC is the champion, ISMCTS ties it. `web/` has its
+scaffold (static, bilingual, offline); the game is not wired yet. `infra/` is a placeholder.
 
 ## Layout
 
@@ -75,6 +75,29 @@ uv run ruff check . && uv run ruff format --check .
 uv run pyright
 uv run briscolab-arena --deals 10000 --out results/<name>.json
 MLFLOW_TRACKING_URI=http://100.89.8.106:5000 uv run briscolab-arena --deals 10000 --mlflow --run-name <name>
+```
+
+## Web
+
+- `web/` is a TanStack Start app prerendered to static files in `dist/client`: every route exists as HTML, the game
+  route (`/gioca`) renders on the client only (`ssr: false`). Its design is `DESIGN.md`; the tokens are in
+  `src/styles/globals.css`.
+- Strings come from Paraglide: `messages/it.json` and `messages/en.json`, compiled to `src/paraglide/` (generated,
+  ignored). Italian is at the root, English under `/en`; the locale lives only in the URL. A new string goes into
+  both files with the same key.
+- PWA: vite-plugin-pwa writes the manifest and `registerSW.js`; it cannot write the service worker inside a Start
+  build, so `scripts/sw.mjs` runs Workbox after `vite build` and precaches every prerendered page. `pnpm icons`
+  redraws the icons in `public/`.
+- The cards in `public/cards/` are the Naples deck from Wikimedia Commons at 480 px, with `credits.json`;
+  `scripts/clean-cards.mjs` takes the 960 px thumbnails and paints out the printer's marks first.
+- The built-in browser of the desktop app does not register service workers: check offline play in Chrome.
+
+```bash
+cd web
+pnpm install
+pnpm dev
+pnpm test && pnpm typecheck && pnpm format:check
+pnpm build
 ```
 
 ## Rules that hold everywhere

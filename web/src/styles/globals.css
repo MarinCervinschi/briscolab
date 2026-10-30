@@ -1,0 +1,94 @@
+@import "tailwindcss";
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/jetbrains-mono/500.css";
+
+/* The tokens of DESIGN.md. Dark is the default; light comes from the system or from data-theme. */
+@theme {
+	--color-ground: #02070a;
+	--color-surface: #0c1418;
+	--color-raised: #17222a;
+	--color-text: #f2f6f8;
+	--color-text-soft: #b4bec4;
+	--color-text-faint: #949ea4;
+	--color-data: #0297de;
+	--color-signal: #fc734d;
+	--color-paper: #fbf8f1;
+	--color-ink-card: #2e241a;
+
+	--font-sans: "Space Grotesk", system-ui, sans-serif;
+	--font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+	--radius-card: 14px;
+	--radius-panel: 28px;
+}
+
+@layer base {
+	:root[data-theme="light"] {
+		--color-ground: #f5f8fa;
+		--color-surface: #e3ebf0;
+		--color-raised: #c5d3db;
+		--color-text: #02070a;
+		--color-text-soft: #3d4a52;
+		--color-text-faint: #55626a;
+		--color-data: #0277b0;
+		--color-signal: #c24a26;
+	}
+	@media (prefers-color-scheme: light) {
+		:root:not([data-theme="dark"]) {
+			--color-ground: #f5f8fa;
+			--color-surface: #e3ebf0;
+			--color-raised: #c5d3db;
+			--color-text: #02070a;
+			--color-text-soft: #3d4a52;
+			--color-text-faint: #55626a;
+			--color-data: #0277b0;
+			--color-signal: #c24a26;
+		}
+	}
+
+	html {
+		background: var(--color-ground);
+		color: var(--color-text);
+		font-family: var(--font-sans);
+		color-scheme: dark light;
+	}
+	h1,
+	h2,
+	h3 {
+		text-wrap: balance;
+	}
+	p {
+		text-wrap: pretty;
+	}
+	:focus-visible {
+		outline: 2px solid var(--color-text);
+		outline-offset: 3px;
+	}
+}
+
+/*
+ * Zuppapp's liquid glass in its dark form, for what floats over the content (DESIGN.md, "Surfaces").
+ * Without backdrop-filter, or with reduced transparency asked for, it is the solid raised surface.
+ */
+@utility glass {
+	isolation: isolate;
+	background: color-mix(in oklab, var(--color-raised) 62%, transparent);
+	-webkit-backdrop-filter: blur(20px) saturate(180%);
+	backdrop-filter: blur(20px) saturate(180%);
+	box-shadow:
+		inset 0 1px 0.5px rgb(255 255 255 / 0.22),
+		inset 0 -1px 1px rgb(0 0 0 / 0.06),
+		inset 0 0 0 1px rgb(255 255 255 / 0.12),
+		0 1px 2px rgb(0 0 0 / 0.06),
+		0 10px 30px rgb(0 0 0 / 0.14);
+	@supports not (backdrop-filter: blur(1px)) {
+		background: var(--color-raised);
+	}
+	@media (prefers-reduced-transparency: reduce) {
+		background: var(--color-raised);
+		backdrop-filter: none;
+	}
+}

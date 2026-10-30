@@ -1,0 +1,19 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"site_description": "Play Briscola against bots and watch how they think.",
+	"nav_play": "Play",
+	"nav_lab": "Lab",
+	"home_title": "Briscolab",
+	"home_lead": "Play Briscola against bots and watch how they think: the hands they imagine, the cards they weigh, the score they expect.",
+	"home_start": "New game",
+	"level_easy": "Easy",
+	"level_medium": "Medium",
+	"level_hard": "Hard",
+	"level_expert": "Expert",
+	"play_title": "Game",
+	"play_soon": "The table arrives with the WebAssembly engine.",
+	"back_home": "Back to the start",
+	"language_switch": "Italiano",
+	"not_found_title": "This page does not exist",
+	"not_found_lead": "The link is wrong or the page has moved."
+}
