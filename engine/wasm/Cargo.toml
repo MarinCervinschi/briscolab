@@ -1,0 +1,16 @@
+[package]
+name = "briscolab-wasm"
+description = "WebAssembly bindings of the Briscolab engine, for the site."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+briscolab-core = { path = "../core" }
+serde_json = "1.0.151"
+wasm-bindgen = "=0.2.129"

@@ -7,6 +7,8 @@ import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
 	resolve: { tsconfigPaths: true },
+	// The engine's worker imports the WebAssembly module, so it is built as an ES module.
+	worker: { format: "es" },
 	plugins: [
 		paraglideVitePlugin({
 			project: "./project.inlang",
@@ -22,12 +24,7 @@ export default defineConfig({
 				crawlLinks: true,
 				filter: ({ path }) => !path.includes("?"),
 			},
-			pages: [
-				{ path: "/" },
-				{ path: "/en" },
-				{ path: "/gioca" },
-				{ path: "/en/gioca" },
-			],
+			pages: [{ path: "/" }, { path: "/en" }, { path: "/play" }, { path: "/en/play" }],
 		}),
 		viteReact(),
 		// Only the manifest and registerSW.js: scripts/sw.mjs writes the service worker after the build.

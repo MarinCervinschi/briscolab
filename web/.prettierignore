@@ -3,3 +3,4 @@ src/routeTree.gen.ts
 src/paraglide
 dist
 project.inlang/cache
+src/engine/pkg

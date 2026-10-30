@@ -3,9 +3,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { LEVELS, parseLevel } from "@/lib/levels";
 import { m } from "@/paraglide/messages";
 
-export const Route = createFileRoute("/gioca")({
+export const Route = createFileRoute("/play")({
 	validateSearch: (search: Record<string, unknown>) => ({
-		livello: parseLevel(search.livello),
+		level: parseLevel(search.level),
 	}),
 	// The game runs in the browser only: the shell is prerendered, the table is not.
 	ssr: false,
@@ -13,8 +13,8 @@ export const Route = createFileRoute("/gioca")({
 });
 
 function Game() {
-	const { livello } = Route.useSearch();
-	const level = LEVELS.find(l => l.id === livello)!;
+	const search = Route.useSearch();
+	const level = LEVELS.find(l => l.id === search.level)!;
 	return (
 		<main className="mx-auto flex min-h-dvh max-w-5xl flex-col gap-4 px-4 py-6 sm:px-8">
 			<h1 className="text-3xl font-bold tracking-tight">

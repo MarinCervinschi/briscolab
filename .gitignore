@@ -28,3 +28,4 @@ infra/**/.terraform/
 *.tfstate.*
 *.tfplan
 web/src/paraglide/
+web/src/engine/pkg/

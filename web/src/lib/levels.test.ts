@@ -4,11 +4,11 @@ import { parseLevel } from "./levels";
 
 describe("parseLevel", () => {
 	it("keeps a known level", () => {
-		expect(parseLevel("esperto")).toBe("esperto");
+		expect(parseLevel("expert")).toBe("expert");
 	});
 
 	it("falls back to the easy level for anything else", () => {
-		expect(parseLevel("impossibile")).toBe("facile");
-		expect(parseLevel(undefined)).toBe("facile");
+		expect(parseLevel("impossible")).toBe("easy");
+		expect(parseLevel(undefined)).toBe("easy");
 	});
 });

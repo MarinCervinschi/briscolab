@@ -201,3 +201,78 @@ fn ismcts_is_reproducible_from_its_seed() {
     let picks = |seed| IsmctsBot::new(200, seed).act(&obs);
     assert_eq!(picks(7), picks(7));
 }
+
+#[test]
+fn the_solver_gives_every_card_its_exact_result() {
+    for seed in 0..100 {
+        random_game(seed, |game, _| {
+            if game.deck_len() > 0 {
+                return;
+            }
+            let each = solve_each(game);
+            assert_eq!(each.len(), game.legal_moves().len());
+            let best = each
+                .iter()
+                .max_by_key(|&&(c, p)| (p, std::cmp::Reverse(c.index())));
+            assert_eq!(best.copied(), solve(game), "seed {seed}");
+        });
+    }
+}
+
+#[test]
+fn ismcts_run_in_steps_plays_the_card_of_one_run() {
+    for seed in 0..20 {
+        let obs = Game::new(seed).observation(Player::P0);
+        let mut search = IsmctsSearch::new(obs.clone(), Rng::new(seed));
+        for _ in 0..7 {
+            search.run(13);
+        }
+        search.run(9);
+        assert_eq!(search.iterations(), 100);
+        assert_eq!(
+            search.best(),
+            IsmctsBot::new(100, seed).act(&obs),
+            "seed {seed}"
+        );
+    }
+}
+
+#[test]
+fn ismcts_reports_its_visits_and_the_hands_it_imagined() {
+    let game = Game::new(4);
+    let obs = game.observation(Player::P0);
+    let mut search = IsmctsSearch::new(obs.clone(), Rng::new(4));
+    search.run(200);
+    let stats = search.stats();
+    assert_eq!(stats.iter().map(|s| s.visits).sum::<u32>(), 200);
+    assert!(stats.iter().all(|s| obs.hand.contains(s.card)));
+    assert!(stats
+        .iter()
+        .all(|s| (0.0..=120.0).contains(&s.expected_points)));
+    let hypotheses: Vec<_> = search.hypotheses().collect();
+    assert_eq!(hypotheses.len(), 8);
+    assert_eq!(hypotheses[0].iteration, 200);
+    for h in hypotheses {
+        assert_eq!(h.opponent_hand.len(), obs.hand_lens[1]);
+        assert!(h.opponent_hand.is_disjoint(obs.hand));
+        assert!(h.points <= 120);
+    }
+}
+
+/// A recorded game: seed 11, ISMCTS with 200 iterations seeded 3 against Hard. The site's engine plays the same
+/// cards (web/src/engine/engine.test.ts).
+#[test]
+fn recorded_ismcts_game_seed_11() {
+    let mut game = Game::new(11);
+    play_out(&mut game, &mut [&mut IsmctsBot::new(200, 3), &mut HardBot]).unwrap();
+    let tricks: Vec<String> = game
+        .tricks()
+        .iter()
+        .map(|t| format!("{} {} {}", t.cards[0], t.cards[1], t.winner))
+        .collect();
+    let expected = "3d 4s P0, 8b 2d P1, 7c 6b P1, 5d 10d P0, 10s 1s P1, 2b 3b P0, 7s 5s P0, 6s 5b P0, 6c 7b P0, \
+                    5c 2s P0, 10b 6d P1, 4b 9b P0, 2c 3c P1, 8c 1c P0, 3s 9d P1, 9s 7d P0, 10c 4c P0, 9c 4d P1, \
+                    1d 8s P1, 1b 8d P0";
+    assert_eq!(tricks.join(", "), expected);
+    assert_eq!(game.points(), [60, 60]);
+}

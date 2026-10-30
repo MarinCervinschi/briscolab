@@ -9,7 +9,8 @@ scaffold (static, bilingual, offline); the game is not wired yet. `infra/` is a 
 
 ## Layout
 
-- `engine/` — Rust Cargo workspace: `core` (rules, bots), `py` (PyO3 binding for the lab); later `wasm` (site).
+- `engine/` — Rust Cargo workspace: `core` (rules, bots), `py` (PyO3 binding for the lab), `wasm` (wasm-bindgen
+  binding for the site).
 - `lab/` — Python with uv: arena, PettingZoo environment, PPO, MLflow logging.
 - `web/` — TanStack Start (Vite, React 19, TanStack Router) built as static files, pnpm, PWA; the Lab pages
   (results, bot articles) with Fumadocs under `/lab`. Same house style as TriviaMore and Zuppapp: tabs +
@@ -32,6 +33,13 @@ scaffold (static, bilingual, offline); the game is not wired yet. `infra/` is a 
   It chooses bots by name in `make_bot` (`pimc:<n>` sets PIMC's determinisations and `ismcts:<n>` ISMCTS's
   iterations; alone they are 100 and 1000); a new bot goes there and in `BOT_NAMES`. `play_duplicates` plays a
   batch of deals on every core with rayon, the only threads in the engine: `core` stays single-threaded.
+- The bots explain their card next to `act`: `GreedyBot::choose` and `HardBot::choose` return the rule that fired,
+  `EndgameBot::choose` that rule or every card's exact result (`solve_each`), and `IsmctsSearch` is ISMCTS in
+  steps (`run`, `stats`, `hypotheses`, `best`), which `IsmctsBot::act` runs in one go with the same random numbers.
+- `engine/wasm` (crate `briscolab-wasm`, deps `wasm-bindgen` and `serde_json`): translation only. A `Session` holds
+  the game and a bot per seat for the whole game, as the arena does; the worker reads what a seat sees and the
+  bot's reasoning as JSON. Bots by name in its `make_bot`. `wasm-bindgen-cli` must match the crate's version
+  (0.2.129): `cargo install wasm-bindgen-cli --version 0.2.129 --locked`.
 - Seats are `Player::P0` and `P1`; `Game::new(seed)` has `P1` deal, so `P0` leads. `Game::from_deck` deals a
   given order, for hand-built tests.
 - `core` stays free of threads, clocks and OS randomness, so it builds for wasm32 and PyO3 unchanged.
@@ -40,7 +48,8 @@ scaffold (static, bilingual, offline); the game is not wired yet. `infra/` is a 
   every bot honours, legal moves and reproducibility, plus each deterministic bot's choices; a new bot goes into
   the list in `bots()` there), `tests/search.rs` (determinisation shows the player exactly their observation; the
   solver on a hand-traced endgame and its guarantee against any opponent; PIMC and ISMCTS play exactly once the
-  deck is empty).
+  deck is empty; ISMCTS in steps; a recorded ISMCTS game, which `web/src/engine/engine.test.ts` replays in
+  WebAssembly).
 - Tests build with `opt-level = 2` (`[profile.test]` in `engine/Cargo.toml`) because the search bots are slow
   unoptimised; overflow checks stay on.
 - Rust comes from Homebrew's keg-only `rustup`: put `/opt/homebrew/opt/rustup/bin` on `PATH`.
@@ -80,7 +89,7 @@ MLFLOW_TRACKING_URI=http://100.89.8.106:5000 uv run briscolab-arena --deals 1000
 ## Web
 
 - `web/` is a TanStack Start app prerendered to static files in `dist/client`: every route exists as HTML, the game
-  route (`/gioca`) renders on the client only (`ssr: false`). Its design is `DESIGN.md`; the tokens are in
+  route (`/play`) renders on the client only (`ssr: false`). Its design is `DESIGN.md`; the tokens are in
   `src/styles/globals.css`.
 - Strings come from Paraglide: `messages/it.json` and `messages/en.json`, compiled to `src/paraglide/` (generated,
   ignored). Italian is at the root, English under `/en`; the locale lives only in the URL. A new string goes into
@@ -91,6 +100,10 @@ MLFLOW_TRACKING_URI=http://100.89.8.106:5000 uv run briscolab-arena --deals 1000
 - The cards in `public/cards/` are the Naples deck from Wikimedia Commons at 480 px, with `credits.json`;
   `scripts/clean-cards.mjs` takes the 960 px thumbnails and paints out the printer's marks first.
 - The built-in browser of the desktop app does not register service workers: check offline play in Chrome.
+- The engine runs in `src/engine/worker.ts`; `pnpm wasm` builds `engine/wasm` into `src/engine/pkg/` (generated,
+  ignored) and `build`, `test` and `typecheck` run it first. The page talks to the worker only through
+  `src/engine/client.ts` and the message union in `protocol.ts`; `types.ts` mirrors the engine's JSON. A bot thinks
+  for at most `THINK_CAP_MS` (1 s) and then plays its best card so far.
 
 ```bash
 cd web

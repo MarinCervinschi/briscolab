@@ -11,15 +11,25 @@ use crate::player::Player;
 /// once the deck is empty and nothing is hidden. It tries every line of play: meant for the last three tricks,
 /// where there are at most 36. Ties go to the lowest card in index order.
 pub fn solve(game: &Game) -> Option<(Card, u8)> {
-    let player = game.to_play()?;
     let mut best: Option<(Card, u8)> = None;
-    for card in game.legal_moves() {
-        let points = points_after(game, card, player);
+    for (card, points) in solve_each(game) {
         if best.is_none_or(|(_, b)| points > b) {
             best = Some((card, points));
         }
     }
     best
+}
+
+/// Every legal card in index order, with the points the player to move ends with after it when both sides then
+/// play perfectly. Empty once the game is over.
+pub fn solve_each(game: &Game) -> Vec<(Card, u8)> {
+    let Some(player) = game.to_play() else {
+        return Vec::new();
+    };
+    game.legal_moves()
+        .iter()
+        .map(|card| (card, points_after(game, card, player)))
+        .collect()
 }
 
 /// The points `player` ends with after `card` is played and both sides then play perfectly.

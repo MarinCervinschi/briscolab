@@ -12,8 +12,28 @@ use crate::observation::Observation;
 #[derive(Clone, Copy, Debug, Default)]
 pub struct HardBot;
 
-impl Bot for HardBot {
-    fn act(&mut self, obs: &Observation) -> Card {
+/// The rule that chose Hard's card, in the order the rules are tried.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum HardRule {
+    /// Leading: its cheapest card.
+    Lead,
+    /// Answering the Tre di briscola with the Asso di briscola.
+    AssoOnTreOfBriscola,
+    /// Answering any other briscola: its cheapest card.
+    SpareOnBriscola,
+    /// Answering an Asso or a Tre of another suit with the Asso of that suit.
+    AssoOnCarico,
+    /// Answering an Asso or a Tre of another suit with its lowest briscola, or its cheapest card if it has none.
+    BriscolaOnCarico,
+    /// Answering any other card with its strongest card of the suit led.
+    StrongestOfSuit,
+    /// Answering a suit it does not hold: its cheapest card.
+    Spare,
+}
+
+impl HardBot {
+    /// The card Hard plays and the rule that chose it.
+    pub fn choose(obs: &Observation) -> (Card, HardRule) {
         let hand = Hand {
             cards: obs.legal_moves(),
             briscola: obs.briscola_suit(),
@@ -21,28 +41,37 @@ impl Bot for HardBot {
         // The Java bot led by estimating the odds that the opponent could beat each card, but early in a game the
         // odds of a briscola alone pass its 50% threshold, so it fell back to this nearly every time.
         match obs.table.first() {
-            None => hand.spare(),
+            None => (hand.spare(), HardRule::Lead),
             Some(&led) => answer(led, &hand),
         }
     }
 }
 
-fn answer(led: Card, hand: &Hand) -> Card {
+impl Bot for HardBot {
+    fn act(&mut self, obs: &Observation) -> Card {
+        HardBot::choose(obs).0
+    }
+}
+
+fn answer(led: Card, hand: &Hand) -> (Card, HardRule) {
     if led.suit() == hand.briscola {
         if led.rank() == Rank::Tre {
             if let Some(asso) = hand.asso_of(hand.briscola) {
-                return asso;
+                return (asso, HardRule::AssoOnTreOfBriscola);
             }
         }
-        return hand.spare();
+        return (hand.spare(), HardRule::SpareOnBriscola);
     }
     if is_carico(led) {
-        return hand
-            .asso_of(led.suit())
-            .unwrap_or_else(|| hand.weakest_briscola_first());
+        return match hand.asso_of(led.suit()) {
+            Some(asso) => (asso, HardRule::AssoOnCarico),
+            None => (hand.weakest_briscola_first(), HardRule::BriscolaOnCarico),
+        };
     }
-    hand.strongest_of(led.suit())
-        .unwrap_or_else(|| hand.spare())
+    match hand.strongest_of(led.suit()) {
+        Some(card) => (card, HardRule::StrongestOfSuit),
+        None => (hand.spare(), HardRule::Spare),
+    }
 }
 
 /// An Asso or a Tre: the two cards worth 10 points or more.

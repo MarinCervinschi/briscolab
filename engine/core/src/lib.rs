@@ -14,7 +14,10 @@ pub mod rng;
 pub mod solver;
 pub mod trick;
 
-pub use bot::{play_out, Bot, EndgameBot, GreedyBot, HardBot, IsmctsBot, PimcBot, RandomBot};
+pub use bot::{
+    play_out, Bot, CardStats, EndgameBot, EndgameReason, GreedyBot, GreedyRule, HardBot, HardRule,
+    Hypothesis, IsmctsBot, IsmctsSearch, PimcBot, RandomBot,
+};
 pub use card::{Card, Rank, Suit, DECK_SIZE, TOTAL_POINTS};
 pub use card_set::CardSet;
 pub use duplicate::play_duplicate;
@@ -22,5 +25,5 @@ pub use game::{DeckError, Game, Outcome, PlayError, HAND_SIZE, STOCK_SIZE, TRICK
 pub use observation::Observation;
 pub use player::{Player, PLAYERS};
 pub use rng::Rng;
-pub use solver::solve;
+pub use solver::{solve, solve_each};
 pub use trick::{trick_winner, Trick};

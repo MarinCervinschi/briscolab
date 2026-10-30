@@ -12,17 +12,47 @@ use crate::trick::trick_winner;
 #[derive(Clone, Copy, Debug, Default)]
 pub struct GreedyBot;
 
-impl Bot for GreedyBot {
-    fn act(&mut self, obs: &Observation) -> Card {
+/// Why Greedy chose its card.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GreedyRule {
+    /// Leading: its cheapest card.
+    Lead,
+    /// Answering with the card that wins the trick for the most points.
+    Take,
+    /// Answering when no card wins the trick, or none is worth it: the card that gives away the fewest points.
+    GiveAway,
+}
+
+impl GreedyBot {
+    /// The card Greedy plays and why.
+    pub fn choose(obs: &Observation) -> (Card, GreedyRule) {
         let briscola = obs.briscola_suit();
         let moves = obs.legal_moves().iter();
-        let card = match obs.table.first() {
-            None => moves.min_by_key(|&c| cost(c, briscola)),
+        match obs.table.first() {
+            None => (
+                moves
+                    .min_by_key(|&c| cost(c, briscola))
+                    .expect("a legal move"),
+                GreedyRule::Lead,
+            ),
             Some(&led) => {
-                moves.max_by_key(|&c| (trick_result(led, c, briscola), Reverse(cost(c, briscola))))
+                let card = moves
+                    .max_by_key(|&c| (trick_result(led, c, briscola), Reverse(cost(c, briscola))))
+                    .expect("a legal move");
+                let rule = if trick_winner(&[led, card], briscola) == 1 {
+                    GreedyRule::Take
+                } else {
+                    GreedyRule::GiveAway
+                };
+                (card, rule)
             }
-        };
-        card.expect("a legal move")
+        }
+    }
+}
+
+impl Bot for GreedyBot {
+    fn act(&mut self, obs: &Observation) -> Card {
+        GreedyBot::choose(obs).0
     }
 }
 

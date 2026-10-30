@@ -7,10 +7,10 @@ mod ismcts;
 mod pimc;
 mod random;
 
-pub use endgame::EndgameBot;
-pub use greedy::GreedyBot;
-pub use hard::HardBot;
-pub use ismcts::IsmctsBot;
+pub use endgame::{EndgameBot, EndgameReason};
+pub use greedy::{GreedyBot, GreedyRule};
+pub use hard::{HardBot, HardRule};
+pub use ismcts::{CardStats, Hypothesis, IsmctsBot, IsmctsSearch};
 pub use pimc::PimcBot;
 pub use random::RandomBot;
 

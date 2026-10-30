@@ -146,6 +146,42 @@ fn hard_leads_its_weakest_card() {
 }
 
 #[test]
+fn greedy_names_the_rule_behind_its_card() {
+    assert_eq!(
+        GreedyBot::choose(&obs("1c 4d 2s", "", "7s")),
+        (c("4d"), GreedyRule::Lead)
+    );
+    assert_eq!(
+        GreedyBot::choose(&obs("2s 3s 4c", "1c", "7s")),
+        (c("3s"), GreedyRule::Take)
+    );
+    assert_eq!(
+        GreedyBot::choose(&obs("1c 10d 4b", "1s", "7s")),
+        (c("4b"), GreedyRule::GiveAway)
+    );
+}
+
+#[test]
+fn hard_names_the_rule_behind_its_card() {
+    let cases = [
+        ("1c 4d 2s", "", c("4d"), HardRule::Lead),
+        ("1s 4c 2d", "3s", c("1s"), HardRule::AssoOnTreOfBriscola),
+        ("1s 4c 3d", "2s", c("4c"), HardRule::SpareOnBriscola),
+        ("1c 2s 4d", "3c", c("1c"), HardRule::AssoOnCarico),
+        ("3c 2s 4d", "1c", c("2s"), HardRule::BriscolaOnCarico),
+        ("3c 2c 4b", "7c", c("3c"), HardRule::StrongestOfSuit),
+        ("1d 2s 3b", "7c", c("2s"), HardRule::Spare),
+    ];
+    for (hand, table, card, rule) in cases {
+        assert_eq!(
+            HardBot::choose(&obs(hand, table, "7s")),
+            (card, rule),
+            "{hand} on {table}"
+        );
+    }
+}
+
+#[test]
 fn a_duplicate_deal_plays_the_same_shuffle_with_seats_swapped() {
     for seed in 0..50 {
         let [as_p0, as_p1] = play_duplicate(seed, &mut HardBot, &mut GreedyBot).unwrap();

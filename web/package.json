@@ -6,15 +6,16 @@
 	"license": "MIT",
 	"packageManager": "pnpm@10.30.1",
 	"scripts": {
-		"dev": "vite dev --port 3000",
-		"build": "vite build && node scripts/sw.mjs",
-		"preview": "vite preview --port 3000",
-		"typecheck": "pnpm i18n && tsc --noEmit",
-		"test": "pnpm i18n && vitest run",
+		"dev": "pnpm i18n && pnpm wasm && vite dev --port 3000",
+		"build": "pnpm wasm && vite build && node scripts/sw.mjs",
+		"preview": "python3 -m http.server 4173 --directory dist/client",
+		"typecheck": "pnpm i18n && pnpm wasm && tsc --noEmit",
+		"test": "pnpm i18n && pnpm wasm && vitest run",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"icons": "node scripts/make-icons.mjs",
-		"i18n": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide"
+		"i18n": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide",
+		"wasm": "cargo build --manifest-path ../engine/Cargo.toml -p briscolab-wasm --release --target wasm32-unknown-unknown && wasm-bindgen --target web --out-dir src/engine/pkg ../engine/target/wasm32-unknown-unknown/release/briscolab_wasm.wasm"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
