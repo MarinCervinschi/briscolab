@@ -1,0 +1,5 @@
+# Settings for scripts/check-public.sh, a copy of the scan in MarinCervinschi/claude-kit (edit it there).
+# The pre-push hook in .githooks/ runs it on the lines a push adds.
+ignore *.lock
+ignore lab/results/*.json
+warn em dash

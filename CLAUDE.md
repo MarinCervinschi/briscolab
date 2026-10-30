@@ -84,20 +84,58 @@ MLFLOW_TRACKING_URI=http://100.89.8.106:5000 uv run briscolab-arena --deals 1000
 - Every game is reproducible from a seed.
 - A bot becomes the champion only through the arena (duplicate deals, 95% intervals), never by eye.
 - Repo, docs and code in English; the site's strings in Italian and English message files.
+- Every push runs `scripts/check-public.sh --pushed` from `.githooks/pre-push` (enable it once per clone:
+  `git config core.hooksPath .githooks`). It blocks secrets, addresses and private names in the lines the push
+  adds, and stops with exit code 2 unless `CLAUDE_KIT_DENYLIST` points at the private deny list. Its settings are
+  in `.check-public`; the script is a copy of the one in `claude-kit`, and changes go there first.
 
 ## How code is written
 
-- Structure (boundaries, SOLID, patterns, tests): the `design-principles` skill. YAGNI first: build what the
-  current milestone needs, nothing for cases that do not exist yet. New bots, experiments and screens are new
-  code, never a branch in the engine; a trait or Protocol needs two implementations or a language boundary;
-  tests go where they pay off.
-- Comments: the `code-comments` skill. Few, and only for what the signature cannot say; the why goes next to the
-  line, never in a doc comment.
-- Prose (docs, commits, reports, site strings): the `plain-writing` skill.
+Stack: rust-py-lab 0.1 (the `stack-rust-py-lab` plugin, a base stack). The general rules come from the `method`
+plugin; the lines below are what Briscolab adds to them.
+
+- Structure: `method:design-principles`. YAGNI first: build what the current milestone needs, nothing for cases
+  that do not exist yet. New bots, experiments and screens are new code, never a branch in the engine; a trait or
+  Protocol needs two implementations or a language boundary; tests go where they pay off.
+- The layers: `core` owns the rules, the observation and the bots; `py` and `wasm` translate only; `lab/` calls
+  `py` and `web/` calls `wasm`. A `match` on game state, a legality check or a point count anywhere but `core` is
+  a bug: move it into `core` and call it. `core` also stays free of the filesystem and of global state.
+- The bot contract: on its turn, given the observation, a bot returns a card from `legal_moves()`, the same card
+  for the same seed. A bot that needs more than the observation (the real deal, a clock) breaks it. Bots on the
+  Python side satisfy a `Protocol` that mirrors `Bot.act`.
+- A field joins `Observation` only if a player at the table knows it (`docs/rules.md`, "What a player knows").
+  Derived knowledge is a method (`unknown()`), not a field.
+- A bot is chosen by name in one registry per edge (`make_bot` in `engine/py`, later the wasm adapter), never in
+  a `match` spread across the code. `PLAYERS` stays a constant so four players stays possible; nothing more
+  general than two-player Briscola gets built.
+- Search and other hot paths do not allocate per move: bitsets and fixed arrays over `Vec` and `HashMap`. Measure
+  before optimising anything else.
+- Randomness comes in as a seed or an `Rng`. Iteration that feeds an `Rng` follows bitset order, never `HashMap`
+  order. A run records its seeds, the engine version and its config.
+- In `web/`, the bot runs in a Web Worker and the worker messages are a discriminated union typed on both sides.
+  Game state comes from the engine through one hook or store, never recomputed in a component.
+- Notebooks and `lab/experiments/` are scratch. Anything the arena, the environment or training imports lives in
+  the package.
+- Tests: a bot's strength is measured in the arena, never in a unit test. Test names state the behaviour
+  (`the_winner_draws_first_and_leads`). A test that uses only the public API goes in `tests/`, one that needs
+  private items in a `#[cfg(test)]` module.
+- Comments: `method:code-comments`. Few, and only for what the signature cannot say; the why goes next to the
+  line, never in a doc comment. Always worth a line: whether a value is hidden from a player. A rule of the game
+  lives in `docs/rules.md`; the code may quote it, never extend it. Italian appears only in names from the game
+  (`briscola`, `Asso`, `coppe`) and in the site's message files.
+- Prose (docs, commits, reports, site strings): `method:plain-writing`. A bot "beats" another only with a 95%
+  interval over duplicate deals (`54.1% ± 1.2 against Greedy over 20 000 duplicate deals`). On the site each
+  object has one name per language (`briscola`, never alternated with "trump"), and a confirmation button carries
+  the verb (`Abbandona`, `Abandon`).
 
 ## Skill routing
 
+Skills come from plugins and are called as `plugin:skill`.
+
 - Adding a module, crate, package, trait, bot, or asking "where does this go?" / "is this over-engineered?" →
-  `design-principles`
-- Writing or changing any comment or doc comment → `code-comments`
-- Writing text someone else reads (docs, commit messages, reports, UI strings) → `plain-writing`
+  `method:design-principles`, with the rules above
+- Writing or changing any comment or doc comment → `method:code-comments`
+- Writing text someone else reads (docs, commit messages, reports, UI strings) → `method:plain-writing`
+- Deciding a milestone or a large feature before building it → `method:spec-interview`
+- How the engine, the binding, the lab and the site fit together → `stack-rust-py-lab:overview`
+- A change that is finished and about to be committed → `method:pre-pr-checklist`
