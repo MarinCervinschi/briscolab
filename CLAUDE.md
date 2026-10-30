@@ -3,8 +3,9 @@
 A lab for two-player Briscola bots, with a site to play against them. Product and decisions: `SPEC.md`.
 The rules the engine implements: `docs/rules.md`.
 
-**Status (2026-10-29): milestone 2, the arena.** The engine (`engine/core`), its Python binding (`engine/py`)
-and the arena (`lab/`, logging to MLflow) exist. Milestone 3, search: the endgame solver, PIMC and ISMCTS are in. `web/` and `infra/` are placeholders.
+**Status (2026-10-30): milestone 4, the site.** The engine (`engine/core`), its Python binding (`engine/py`),
+the arena (`lab/`, logging to MLflow) and the search bots exist; PIMC is the champion, ISMCTS ties it. `web/` and
+`infra/` are placeholders.
 
 ## Layout
 
@@ -21,17 +22,16 @@ and the arena (`lab/`, logging to MLflow) exist. Milestone 3, search: the endgam
   `Rank`), `card_set.rs` (`CardSet`, a bitset over a `u64`), `player.rs`, `trick.rs` (`Trick`, `trick_winner`),
   `game.rs` (`Game`: deal, drawing, scoring, end), `observation.rs` (what one player knows), `rng.rs`
   (xoshiro256** seeded by SplitMix64, same numbers on every platform), `bot/` (`Bot::act` and `play_out` in
-  `mod.rs`, one file per bot: `random.rs`, `greedy.rs`, `hard.rs`, `endgame.rs`, `pimc.rs`, `ismcts.rs`; `playout` in `mod.rs` is the search bots' rollout:
-  Hard while the deck lasts, then the solver), `duplicate.rs`
+  `mod.rs`, one file per bot: `random.rs`, `greedy.rs`, `hard.rs`, `endgame.rs`, `pimc.rs`, `ismcts.rs`; `playout`
+  in `mod.rs` is the search bots' rollout: Hard while the deck lasts, then the solver), `duplicate.rs`
   (`play_duplicate`: one shuffle, seats swapped), `solver.rs` (`solve`: exact play once every card is known).
 - `Game::determinise(obs, rng)` builds a full game consistent with an observation, dealing the cards the player
   cannot place at random; with the deck empty it is the real game. Search bots work on these, never on the real
   `Game`.
 - `engine/py` (crate `briscolab-py`, Python module `briscolab_engine`, built by maturin): translation only.
-  It chooses bots by name in `make_bot` (`pimc:<n>` sets PIMC's determinisations and `ismcts:<n>` ISMCTS's iterations; alone
-  they are 100 and 1000); a new bot
-  goes there and in `BOT_NAMES`. `play_duplicates` plays a batch of deals on every core with rayon, the only
-  threads in the engine: `core` stays single-threaded.
+  It chooses bots by name in `make_bot` (`pimc:<n>` sets PIMC's determinisations and `ismcts:<n>` ISMCTS's
+  iterations; alone they are 100 and 1000); a new bot goes there and in `BOT_NAMES`. `play_duplicates` plays a
+  batch of deals on every core with rayon, the only threads in the engine: `core` stays single-threaded.
 - Seats are `Player::P0` and `P1`; `Game::new(seed)` has `P1` deal, so `P0` leads. `Game::from_deck` deals a
   given order, for hand-built tests.
 - `core` stays free of threads, clocks and OS randomness, so it builds for wasm32 and PyO3 unchanged.
@@ -39,8 +39,8 @@ and the arena (`lab/`, logging to MLflow) exist. Milestone 3, search: the endgam
   over thousands of seeded games, plus a recorded game that pins the generator), `tests/bots.rs` (the contract
   every bot honours, legal moves and reproducibility, plus each deterministic bot's choices; a new bot goes into
   the list in `bots()` there), `tests/search.rs` (determinisation shows the player exactly their observation; the
-  solver on a hand-traced endgame and its guarantee against any opponent; PIMC and ISMCTS play exactly once the deck is
-  empty).
+  solver on a hand-traced endgame and its guarantee against any opponent; PIMC and ISMCTS play exactly once the
+  deck is empty).
 - Tests build with `opt-level = 2` (`[profile.test]` in `engine/Cargo.toml`) because the search bots are slow
   unoptimised; overflow checks stay on.
 - Rust comes from Homebrew's keg-only `rustup`: put `/opt/homebrew/opt/rustup/bin` on `PATH`.
