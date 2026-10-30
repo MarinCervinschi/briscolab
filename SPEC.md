@@ -52,7 +52,7 @@ The engine is the only place that knows the rules. The lab and the site never re
    as JSON for the Lab pages.
 3. **Search**: endgame solver, PIMC, ISMCTS, tuned in the arena. Done on 2026-10-30: PIMC is the champion, and
    ISMCTS at 1000 iterations ties it ([lab/results/ismcts.json](lab/results/ismcts.json)).
-4. **Site v1**: play the search bots at three or four difficulty levels, PWA, Umami events; the Lab pages with
+4. **Site v1** (epic [#1](https://github.com/MarinCervinschi/briscolab/issues/1)): play the search bots at three or four difficulty levels, PWA, Umami events; the Lab pages with
    the arena results and an article per bot. Online.
 5. **RL (v1.1)**: PettingZoo env, PPO self-play, evaluation against the champion, ONNX export; on the site only if it wins.
 

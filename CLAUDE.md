@@ -3,7 +3,7 @@
 A lab for two-player Briscola bots, with a site to play against them. Product and decisions: `SPEC.md`.
 The rules the engine implements: `docs/rules.md`.
 
-**Status (2026-10-30): milestone 4, the site.** The engine (`engine/core`), its Python binding (`engine/py`),
+**Status (2026-10-30): milestone 4, the site, tracked in epic #1 and its sub-issues.** The engine (`engine/core`), its Python binding (`engine/py`),
 the arena (`lab/`, logging to MLflow) and the search bots exist; PIMC is the champion, ISMCTS ties it. `web/` and
 `infra/` are placeholders.
 
