@@ -23,7 +23,7 @@ Decided on 2026-10-28 in an interview (decision 11 revised and 17 added the same
 | 10  | Compute          | The Mac (M4): CPU for arena and search, MPS for the networks. A rented VM on the tailnet only if an experiment outgrows it. Nothing heavy on savvy                                                                                                                                                                                                                                                                                  | Briscola is small; savvy serves TriviaMore and Zuppapp                                                                                                         |
 | 11  | Site             | **TanStack Start** (Vite, React 19, TanStack Router) with static prerendering, Tailwind 4, `motion`, TanStack Query where useful, Vitest. The build is static files: the game runs client-only, the Lab pages are prerendered. PWA (installable, offline). Designed for both phone (portrait, one hand) and desktop (mouse and keyboard, wide screen); neither is a stretched version of the other                                  | Still no server. Prerendering makes the Lab articles real HTML for search engines and link previews, and Fumadocs supports Start                               |
 | 12  | Bots on the site | They run **in the browser**: the engine in WebAssembly inside a **Web Worker**, networks via ONNX. A time budget per move (e.g. 300 ms), not a fixed number of iterations. The arena never uses time: each level maps to an iteration count measured on a phone                                                                                                                                                                     | Zero inference servers; on a slow phone a bot gets a little weaker, not slower; the UI stays smooth                                                            |
-| 13  | Data             | **Nothing stored by us.** At the end of a game, one anonymous Umami event (bot, bot version, difficulty, winner, point difference). No moves, no cookies, no database                                                                                                                                                                                                                                                               | Win rate against real people for free, with no backend and no personal data                                                                                    |
+| 13  | Data             | **Nothing stored by us.** At the end of a game, one anonymous Umami event (bot, bot version, difficulty, winner, point difference, whether the bot's thoughts were revealed). No moves, no cookies, no database                                                                                                                                                                                                                                                               | Win rate against real people for free, with no backend and no personal data                                                                                    |
 | 14  | Hosting          | **Coolify on savvy**, a static container built from `main`, at `briscolab.cervinschi.site` (the wildcard exists). Terraform in `infra/` as in Zuppapp. Production and local only                                                                                                                                                                                                                                                    | Same infra as the other apps                                                                                                                                   |
 | 15  | Cards            | Traditional **Neapolitan** designs from a freely licensed set (Wikimedia Commons, CC or public domain), optimised SVG, attribution in the credits                                                                                                                                                                                                                                                                                   | Commercial decks (e.g. Modiano) are protected; Neapolitan cards are what most players expect                                                                   |
 | 16  | Languages        | Site in **Italian** by default and **English**, strings in message files from day one. Repo, docs and code in **English**                                                                                                                                                                                                                                                                                                           | The game is Italian, the research audience is not                                                                                                              |
@@ -58,19 +58,22 @@ The engine is the only place that knows the rules. The lab and the site never re
 
 ## Screens (site v1)
 
-1. **Home**: choose a bot / difficulty, start a game.
+1. **Home**: choose a level and start a game. Four levels, each one bot: Easy (Greedy), Medium (Hard), Hard
+   (Endgame), Expert (ISMCTS, which can stop at any iteration and so fits a time budget).
 2. **Game**: the bot's hand face down, briscola under the deck, points at the end. On a phone, a portrait table
    with your three cards at the thumb, tap to play. On desktop, a wide table with the tricks taken and the cards
-   played in view; click or press 1–3 to play.
-3. **Result**: score, a replay of the tricks.
+   played in view; click or press 1–3 to play. The bot thinks in view: for ISMCTS the hands it imagines for you
+   and a bar per card growing with the iterations, for Endgame each card's exact result, for Greedy and Hard the
+   rule that fired. Whatever would give away the bot's hand is blurred until the player reveals it; the point is
+   to watch how the bot reasons, not to beat it at all costs.
+3. **Result**: score, a replay of the tricks with the bot's reasoning at every move.
 4. **Lab** (Fumadocs, `/lab`): the arena leaderboard with intervals, an article per bot on how it thinks, the
    arena method, and a page per published run.
 5. **Credits / privacy**: card attribution, the Umami note.
 
 ## Open questions
 
-- Which bots map to which difficulty levels, and the time budget per level.
-- Showing a bot's "thoughts" during a game (win probability per card), and whether it belongs in v1.
+- The time budget per level.
 - Sound and haptics: which events, and an off switch.
 - The design direction (as Zuppapp has `DESIGN.md`).
 - CI for `web/` (`pnpm test`); the engine's and the lab's run in `.github/workflows/`.
