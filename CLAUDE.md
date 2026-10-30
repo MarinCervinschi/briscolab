@@ -1,6 +1,6 @@
 # Briscolab
 
-A lab for two-player Briscola bots, with a site to play against them. Product and decisions: `SPEC.md`.
+A lab for two-player Briscola bots, with a site to play against them. Product and decisions: `SPEC.md`; the site's design: `DESIGN.md`.
 The rules the engine implements: `docs/rules.md`.
 
 **Status (2026-10-30): milestone 4, the site, tracked in epic #1 and its sub-issues.** The engine (`engine/core`), its Python binding (`engine/py`),
