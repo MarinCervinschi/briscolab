@@ -83,5 +83,12 @@
 	"result_exact": "Exact result: {points} points",
 	"result_details": "The reasoning",
 	"game_taken_one": "1 trick",
-	"game_taken_many": "{count} tricks"
+	"game_taken_many": "{count} tricks",
+	"game_shuffling": "The bot shuffles the deck",
+	"game_dealing": "The bot deals",
+	"game_deck_empty": "The deck is empty",
+	"game_abandon": "Abandon",
+	"game_abandon_title": "Abandon the game?",
+	"game_abandon_body": "The game ends here and is not saved. You go back to the start.",
+	"game_keep_playing": "Keep playing"
 }

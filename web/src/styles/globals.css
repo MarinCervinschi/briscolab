@@ -92,3 +92,20 @@
 		backdrop-filter: none;
 	}
 }
+
+/*
+ * The card sizes of the game screen. On desktop they follow the window's height, so the whole table fits
+ * without scrolling down to about 600 px.
+ */
+@utility game-sizes {
+	--hand-h: 176px;
+	--table-h: 132px;
+	--back-h: 96px;
+	--deck-h: 88px;
+	@media (width >= 64rem) {
+		--hand-h: clamp(128px, calc((100dvh - 240px) / 3), 220px);
+		--table-h: var(--hand-h);
+		--back-h: calc(var(--hand-h) * 0.68);
+		--deck-h: calc(var(--hand-h) * 0.62);
+	}
+}

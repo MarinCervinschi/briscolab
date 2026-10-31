@@ -4,7 +4,7 @@ import type { BotName, Card, Reasoning, Trick, View } from "@/engine/types";
 /** The bot is in seat 1, the player in seat 0. */
 export const BOT = 1;
 /** How long a finished trick stays on the table before the next card. */
-export const TRICK_MS = 900;
+export const TRICK_MS = 1200;
 /** The least time the bot is seen thinking (SPEC.md, decision 12); a tap skips it. */
 export const MIN_THINK_MS = 1200;
 

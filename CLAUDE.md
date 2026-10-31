@@ -105,7 +105,7 @@ MLFLOW_TRACKING_URI=http://100.89.8.106:5000 uv run briscolab-arena --deals 1000
   `src/engine/client.ts` and the message union in `protocol.ts`; `types.ts` mirrors the engine's JSON. A bot thinks
   for at most `THINK_CAP_MS` (1 s) and then plays its best card so far.
 - A game on the page is a `GameRunner` (`src/lib/game/runner.ts`): it drives the worker turn by turn, holds the bot
-  for at least 1.2 s of visible thinking (skippable) and a won trick for 0.9 s, and records the bot's reasoning per
+  for at least 1.2 s of visible thinking (skippable) and a won trick for 1.2 s, and records the bot's reasoning per
   card for the replay. Components read it through `useGame`; `/play?level=…&seed=…` names a game, and a game
   without a seed gets one in the URL.
 

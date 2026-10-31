@@ -154,7 +154,9 @@ sections stay visible.
 
 - Sober and precise: cards slide and turn on short springs, the bars and the cursor grow smoothly. Nothing moves
   for decoration.
-- On phones the animations are off by default; the settings turn them on.
+- The game opens with the bot shuffling and dealing; played cards travel from the hand to the table, a won trick
+  goes to the winner's pile, and drawn cards come off the deck turning over. They run on phones too; the settings
+  will turn them off.
 - The bot thinks for at least about 1.2 s; a tap or a key skips it (decision 12 in `SPEC.md`).
 - Under `prefers-reduced-motion` only fades remain.
 

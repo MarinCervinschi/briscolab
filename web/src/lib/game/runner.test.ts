@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Engine, Move } from "@/engine/client";
 import type { Card, Reasoning, View } from "@/engine/types";
 
-import { GameRunner } from "./runner";
+import { GameRunner, TRICK_MS } from "./runner";
 
 const card = (index: number): Card => ({
 	index,
@@ -76,7 +76,7 @@ describe("GameRunner", () => {
 		await runner.play(card(1));
 		// The bot is seen thinking for its minimum time, then the trick it won stays on the table.
 		expect(waits[0]).toBeGreaterThan(1000);
-		expect(waits[1]).toBe(900);
+		expect(waits[1]).toBe(TRICK_MS);
 		expect(runner.state.moves).toEqual([{ trick: 0, card: card(5), reasoning }]);
 		expect(runner.state.reasoning).toEqual(reasoning);
 		expect(runner.state.lastTrick).toBeNull();
@@ -95,7 +95,9 @@ describe("GameRunner", () => {
 	it("skips the bot's visible thinking", async () => {
 		let release: () => void = () => {};
 		const runner = new GameRunner(fakeEngine(), ms =>
-			ms > 1000 ? new Promise<void>(r => (release = r)) : Promise.resolve()
+			ms > 1000 && ms !== TRICK_MS
+				? new Promise<void>(r => (release = r))
+				: Promise.resolve()
 		);
 		await runner.start(1, "hard", 2);
 		const playing = runner.play(card(1));

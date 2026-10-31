@@ -83,5 +83,12 @@
 	"result_exact": "Calcolo esatto: {points} punti",
 	"result_details": "Il ragionamento",
 	"game_taken_one": "1 presa",
-	"game_taken_many": "{count} prese"
+	"game_taken_many": "{count} prese",
+	"game_shuffling": "Il bot mescola il mazzo",
+	"game_dealing": "Il bot dà le carte",
+	"game_deck_empty": "Il mazzo è finito",
+	"game_abandon": "Abbandona",
+	"game_abandon_title": "Abbandoni la partita?",
+	"game_abandon_body": "La partita finisce qui e non viene salvata. Torni all'inizio.",
+	"game_keep_playing": "Continua a giocare"
 }

@@ -5,7 +5,8 @@ const TOTAL = 120;
 
 /**
  * The 120-point bar (DESIGN.md, "The 120-point bar"): a thin track from the bot at the top to the player at the
- * bottom, the bot's share in blue, the 61-point notch in orange and the bot's figure in a glass cursor.
+ * bottom, the bot's share in blue from the top, the player's in white from the bottom, the 61-point notch in orange
+ * and the bot's figure in a glass cursor.
  * `forecast` says whether the figures are the bot's forecast or the points already taken.
  */
 export function PointsBar({
@@ -18,6 +19,7 @@ export function PointsBar({
 	forecast: boolean;
 }) {
 	const share = `${(bot / TOTAL) * 100}%`;
+	const yours = `${(you / TOTAL) * 100}%`;
 	const win = `${(WIN / TOTAL) * 100}%`;
 	const label = forecast ? m.bar_forecast({ bot, you }) : m.bar_taken({ bot, you });
 	return (
@@ -32,6 +34,10 @@ export function PointsBar({
 					<div
 						className="bg-data absolute inset-x-0 top-0 rounded-full transition-[height] duration-300 ease-out"
 						style={{ height: share }}
+					/>
+					<div
+						className="bg-text/85 absolute inset-x-0 bottom-0 rounded-full transition-[height] duration-300 ease-out"
+						style={{ height: yours }}
 					/>
 				</div>
 				<div className="bg-signal absolute -left-2.5 h-0.5 w-11" style={{ top: win }} />

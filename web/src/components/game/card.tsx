@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import type { Card } from "@/engine/types";
 import { cardImage, cardIndex } from "@/lib/cards";
 import { cn } from "@/lib/cn";
@@ -59,9 +61,18 @@ const EDGES: [[number, number], [number, number]][] = [
 ];
 
 /** The back of a card: the tree on the technical plate, the default back. `label` names the bot. */
-export function CardBack({ label, className }: { label?: string; className?: string }) {
+export function CardBack({
+	label,
+	className,
+	style,
+}: {
+	label?: string;
+	className?: string;
+	style?: CSSProperties;
+}) {
 	return (
 		<span
+			style={style}
 			className={cn(
 				"relative block overflow-hidden rounded-[12px] bg-[#04121c]",
 				className
