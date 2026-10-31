@@ -102,7 +102,8 @@ export class GameRunner {
 	}
 
 	private async botTurn(before: View) {
-		this.set({ phase: "bot", reasoning: null });
+		// The last reasoning stays on screen until the search sends its first thoughts or the card is chosen.
+		this.set({ phase: "bot" });
 		this.skipAsked = false;
 		const start = performance.now();
 		const move = await this.engine.think(reasoning => this.set({ reasoning }));
