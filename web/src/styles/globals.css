@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* Tailwind skips what .gitignore lists, but the Docker build has no .gitignore: without this it reads the client
+   build in dist/ while building the server, and the prerendered pages link a stylesheet that does not exist. */
+@source not "../../dist";
 @import "@fontsource/space-grotesk/400.css";
 @import "@fontsource/space-grotesk/500.css";
 @import "@fontsource/space-grotesk/600.css";
@@ -105,9 +108,9 @@
  */
 @utility game-sizes {
 	--hand-h: 176px;
-	--table-h: 132px;
-	--back-h: 96px;
-	--deck-h: 88px;
+	--table-h: 150px;
+	--back-h: 104px;
+	--deck-h: 96px;
 	@media (width >= 64rem) {
 		--hand-h: clamp(128px, calc((100dvh - 240px) / 3), 220px);
 		--table-h: var(--hand-h);

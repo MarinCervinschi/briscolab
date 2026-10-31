@@ -4,7 +4,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { AbandonDialog } from "@/components/game/abandon-dialog";
 import { PlacesContext, newPlaces, reducedMotion } from "@/components/game/moving-card";
-import { PointsBar } from "@/components/game/points-bar";
+import { PointsBar, Scoreboard } from "@/components/game/points-bar";
 import { ReasoningView } from "@/components/game/reasoning-view";
 import { Result } from "@/components/game/result";
 import {
@@ -178,10 +178,21 @@ function Game({
 
 				<main className="mx-auto grid w-full max-w-[1440px] flex-1 gap-6 px-4 pt-3 pb-4 lg:px-7 lg:pt-6 xl:grid-cols-[minmax(0,1fr)_380px]">
 					<section className="flex min-w-0 flex-col">
-						<div className="flex flex-1 gap-3 lg:gap-6">
+						<div className="flex flex-1 gap-6">
 							<Bar state={state} />
-							<Felt className="flex min-w-0 flex-1 flex-col px-3 pt-4 pb-[calc(var(--hand-h)*0.42)] lg:px-8 lg:pt-7">
-								<BotHand view={view} label={level.bot} stage={stage} />
+							<Felt className="flex min-w-0 flex-1 flex-col px-3 pt-4 pb-[calc(var(--hand-h)*0.62)] lg:px-8 lg:pt-7 lg:pb-[calc(var(--hand-h)*0.42)]">
+								<div className="flex items-start gap-3">
+									<div className="min-w-0 flex-1">
+										<BotHand view={view} label={level.bot} stage={stage} />
+									</div>
+									<div className="lg:hidden">
+										<Scoreboard
+											bot={view.points[BOT]}
+											you={view.points[0]}
+											forecast={forecast(state.reasoning)}
+										/>
+									</div>
+								</div>
 								<Status
 									state={state}
 									stage={stage}
@@ -273,7 +284,7 @@ function Game({
 function Bar({ state }: { state: GameState }) {
 	const points = state.view!.points;
 	return (
-		<div className="flex shrink-0 pt-2 pb-[calc(var(--hand-h)*0.42)] lg:pb-2">
+		<div className="hidden shrink-0 py-2 lg:flex">
 			<PointsBar
 				bot={points[BOT]}
 				you={points[0]}

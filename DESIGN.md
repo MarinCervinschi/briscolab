@@ -111,14 +111,11 @@ credits page with the cards.
 
 ### Phone (portrait)
 
-No table surface: the cards sit on the ground.
-
 1. A top row: the round glass back button, the level and the trick ("Esperto", "Presa 9 di 20"), and the glass
    "Ragionamento" pill that opens the reasoning sheet.
-2. The 120-point bar runs down the left edge for the full height of the play area.
-3. Beside it, from the top: the bot's three backs, one line of status ("Il bot pensa: 640 ipotesi su 1000"), the
-   deck with the briscola and the cards left, the card on the table.
-4. The player's hand at the bottom, at the thumb.
+2. The table, from the top: the bot's three backs with the scoreboard in the corner, one line of status ("Il bot
+   pensa: 640 ipotesi su 1000"), the deck with the briscola and the cards left, the cards on the table.
+3. The player's hand at the bottom, at the thumb, over the table's lower edge.
 
 ### Desktop
 
@@ -137,6 +134,10 @@ No table surface: the cards sit on the ground.
 - When the bot has a forecast (Esperto, and Difficile with the deck empty), a blue ring marks on the track the points
   it expects to end with, labelled "≈74". It slides while the bot thinks.
 - "Bot" labels the top end; "Tu" and the player's points label the bottom end.
+- When the forecast comes within a few points above 61, the "61" moves below its notch.
+- On a phone there is no bar: it took the table's room. A small glass scoreboard sits in the table's top corner,
+  beside the bot's backs: "Bot" with its points in blue and the forecast ("≈75"), "Tu" with the player's points,
+  each figure in orange once it reaches 61.
 - It reads as an image for a screen reader: "Il bot ha preso 15 punti, tu 46; si vince da 61. Il bot prevede di
   chiudere con 74."
 
