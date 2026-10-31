@@ -172,7 +172,8 @@ export function Deck({ view, stage }: { view: View; stage: Stage }) {
 							from={() => null}
 							turn={stage === "deal"}
 							delay={BRISCOLA_DELAY_S}
-							className="outline-signal h-full w-full rounded-[12px] outline-2 outline-offset-2"
+							className="h-full w-full"
+							faceClassName="outline-signal outline-2 outline-offset-2"
 						/>
 					</span>
 				)}
@@ -272,10 +273,15 @@ export function TableCards({ view, state }: { view: View; state: GameState }) {
 							seat === BOT ? places.botHand.at(-1) : places.hand.get(card.index)
 						}
 						className={cn(
-							"h-(--table-h) w-[calc(var(--table-h)*0.61)] rounded-[12px] shadow-[0_14px_30px_-8px_rgb(0_0_0/0.75),0_0_0_1px_rgb(0_0_0/0.25)]",
+							"h-(--table-h) w-[calc(var(--table-h)*0.61)]",
 							seat === BOT ? "-translate-y-3 -rotate-6" : "translate-y-4 rotate-[5deg]",
-							i > 0 && "-ml-[calc(var(--table-h)*0.2)]",
-							winner === seat && "outline-signal outline-2 outline-offset-3"
+							i > 0 && "-ml-[calc(var(--table-h)*0.2)]"
+						)}
+						faceClassName={cn(
+							"shadow-[0_14px_30px_-8px_rgb(0_0_0/0.75),0_0_0_1px_rgb(0_0_0/0.25)] transition-[outline-color] duration-200",
+							winner === seat
+								? "outline-signal outline-2 outline-offset-3"
+								: "outline-transparent outline-2 outline-offset-3"
 						)}
 					/>
 				);
@@ -375,7 +381,8 @@ export function Hand({
 								turn
 								from={() => places.deck}
 								delay={stage === "deal" ? dealDelay(0, i) : drawDelay(view, 0)}
-								className="h-(--hand-h) w-[calc(var(--hand-h)*0.61)] rounded-[12px] shadow-[0_18px_40px_-14px_rgb(0_0_0/0.8)]"
+								className="h-(--hand-h) w-[calc(var(--hand-h)*0.61)]"
+								faceClassName="shadow-[0_18px_40px_-14px_rgb(0_0_0/0.8)]"
 							/>
 							<span
 								aria-hidden="true"

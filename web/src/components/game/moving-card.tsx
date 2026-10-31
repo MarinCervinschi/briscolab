@@ -55,6 +55,7 @@ export function MovingCard({
 	delay = 0,
 	label,
 	className,
+	faceClassName,
 }: {
 	card?: Card;
 	from: () => DOMRect | null | undefined;
@@ -62,11 +63,16 @@ export function MovingCard({
 	delay?: number;
 	label?: string;
 	className?: string;
+	/** For what must turn with the card, such as its frame and shadow. */
+	faceClassName?: string;
 }) {
 	const outer = useRef<HTMLSpanElement>(null);
 	const inner = useRef<HTMLSpanElement>(null);
+	const arrived = useRef(false);
 	useLayoutEffect(() => {
-		if (reducedMotion()) return;
+		// Strict mode runs the effect twice in development; the second run would measure the card already moved.
+		if (arrived.current || reducedMotion()) return;
+		arrived.current = true;
 		const rect = from();
 		const el = outer.current!;
 		const options = { duration: TRAVEL_S, delay, ease: EASE };
@@ -94,14 +100,17 @@ export function MovingCard({
 				{card ? (
 					<CardFace
 						card={card}
-						className="h-full w-full [backface-visibility:hidden]"
+						className={cn("h-full w-full [backface-visibility:hidden]", faceClassName)}
 					/>
 				) : (
-					<CardBack label={label} className="h-full w-full" />
+					<CardBack label={label} className={cn("h-full w-full", faceClassName)} />
 				)}
 				{card && turn && (
 					<CardBack
-						className="h-full w-full [transform:rotateY(180deg)] [backface-visibility:hidden]"
+						className={cn(
+							"h-full w-full [transform:rotateY(180deg)] [backface-visibility:hidden]",
+							faceClassName
+						)}
 						style={{ position: "absolute", inset: 0 }}
 					/>
 				)}
