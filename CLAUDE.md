@@ -5,7 +5,8 @@ The rules the engine implements: `docs/rules.md`.
 
 **Status (2026-10-30): milestone 4, the site, tracked in epic #1 and its sub-issues.** The engine (`engine/core`), its Python binding (`engine/py`),
 the arena (`lab/`, logging to MLflow) and the search bots exist; PIMC is the champion, ISMCTS ties it. `web/` has its
-scaffold (static, bilingual, offline); it plays the four levels; the Lab is not built yet. `infra/` is a placeholder.
+scaffold (static, bilingual, offline); it plays the four levels; the Lab is not built yet. `infra/` deploys it
+to `briscolab.cervinschi.site`.
 
 ## Layout
 
@@ -15,7 +16,8 @@ scaffold (static, bilingual, offline); it plays the four levels; the Lab is not 
 - `web/` — TanStack Start (Vite, React 19, TanStack Router) built as static files, pnpm, PWA; the Lab pages
   (results, bot articles) with Fumadocs under `/lab`. Same house style as TriviaMore and Zuppapp: tabs +
   semicolons (Prettier), `@/` for `src/`.
-- `infra/` — Terraform for the Coolify static app, as in Zuppapp.
+- `infra/` — Terraform for the Coolify static app, as in Zuppapp; `Dockerfile` at the root builds the site and nginx
+  serves it (`web/nginx.conf`). See `infra/README.md`.
 
 ## Engine
 
@@ -115,6 +117,7 @@ pnpm install
 pnpm dev
 pnpm test && pnpm typecheck && pnpm format:check
 pnpm build
+pnpm infra:plan      # needs the Infisical CLI signed in and Tailscale on
 ```
 
 ## Rules that hold everywhere

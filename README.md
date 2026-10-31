@@ -12,6 +12,12 @@ in [lab/results/](lab/results/). See [SPEC.md](SPEC.md) and [docs/rules.md](docs
 It grows out of [Briscola](https://github.com/MarinCervinschi/Briscola), a JavaFX university project, whose Hard
 bot becomes one of the baselines here.
 
+## Deploy
+
+The site is served at https://briscolab.cervinschi.site from a container on Coolify. `Dockerfile` builds the engine
+to WebAssembly and prerenders every page, then nginx serves the files (`web/nginx.conf`). Coolify rebuilds it on
+every push to `main` that touches `web/` or `engine/`. The Coolify app is Terraform in [infra/](infra/README.md).
+
 ## License
 
 MIT.

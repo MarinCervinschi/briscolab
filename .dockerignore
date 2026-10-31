@@ -1,0 +1,9 @@
+.git
+**/node_modules
+**/.terraform
+engine/target
+lab
+infra
+web/dist
+web/src/paraglide
+web/src/engine/pkg
