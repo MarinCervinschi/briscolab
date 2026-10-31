@@ -15,10 +15,7 @@
 		"format:check": "prettier --check .",
 		"icons": "node scripts/make-icons.mjs",
 		"i18n": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide",
-		"wasm": "cargo build --manifest-path ../engine/Cargo.toml -p briscolab-wasm --release --target wasm32-unknown-unknown && wasm-bindgen --target web --out-dir src/engine/pkg ../engine/target/wasm32-unknown-unknown/release/briscolab_wasm.wasm",
-		"infra:plan": "bash ../infra/run.sh prod plan",
-		"infra:apply": "bash ../infra/run.sh prod apply",
-		"infra:output": "bash ../infra/run.sh prod output"
+		"wasm": "cargo build --manifest-path ../engine/Cargo.toml -p briscolab-wasm --release --target wasm32-unknown-unknown && wasm-bindgen --target web --out-dir src/engine/pkg ../engine/target/wasm32-unknown-unknown/release/briscolab_wasm.wasm"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

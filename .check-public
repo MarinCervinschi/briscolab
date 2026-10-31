@@ -4,7 +4,5 @@ ignore *.lock
 ignore lab/results/*.json
 warn em dash
 ignore web/pnpm-lock.yaml
-ignore *.terraform.lock.hcl
-# The site's own address and the name of the shared infra project, both public on purpose.
+# The site's own address, public on purpose.
 allow-name cervinschi\.site
-allow-name cervinschi-infra

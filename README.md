@@ -16,7 +16,7 @@ bot becomes one of the baselines here.
 
 The site is served at https://briscolab.cervinschi.site from a container on Coolify. `Dockerfile` builds the engine
 to WebAssembly and prerenders every page, then nginx serves the files (`web/nginx.conf`). Coolify rebuilds it on
-every push to `main` that touches `web/` or `engine/`. The Coolify app is Terraform in [infra/](infra/README.md).
+every push to `main` that touches `web/` or `engine/`. The Coolify app itself is managed in a private repo.
 
 ## License
 
