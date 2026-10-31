@@ -88,7 +88,11 @@ export class GameRunner {
 
 	private async after(before: View, after: View) {
 		if (after.tricks.length > before.tricks.length) {
-			this.set({ phase: "trick", view: after, lastTrick: after.tricks.at(-1)! });
+			this.set({
+				phase: "trick",
+				view: beforeDrawing(before, after),
+				lastTrick: after.tricks.at(-1)!,
+			});
 			await this.wait(TRICK_MS);
 		}
 		this.set({ view: after, lastTrick: null });
@@ -143,4 +147,20 @@ export class GameRunner {
 		this.state = { ...this.state, ...next };
 		for (const listener of this.listeners) listener();
 	}
+}
+
+/**
+ * `after` as it looked before the two players drew: while the trick is shown, the drawn cards are still on the
+ * deck. Only what is on screen changes; the engine has already dealt them.
+ */
+export function beforeDrawing(before: View, after: View): View {
+	const hand = after.hand.filter(c => before.hand.some(h => h.index === c.index));
+	const drawn = after.hand.length - hand.length;
+	return {
+		...after,
+		hand,
+		handLens: [after.handLens[0] - drawn, after.handLens[1] - drawn],
+		deckLen: after.deckLen + 2 * drawn,
+		briscolaDrawnBy: before.briscolaDrawnBy,
+	};
 }

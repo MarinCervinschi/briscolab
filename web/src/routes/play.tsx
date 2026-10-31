@@ -209,7 +209,7 @@ function Game({
 
 					<aside
 						aria-label={m.reasoning_title()}
-						className="bg-surface sticky top-22 hidden flex-col gap-6 self-start rounded-[28px] p-7 xl:flex"
+						className="bg-surface sticky top-22 hidden max-h-[calc(100dvh-7rem)] flex-col gap-6 self-start overflow-y-auto overscroll-contain rounded-[28px] p-7 xl:flex"
 					>
 						<h2 className="text-xl font-semibold">{m.reasoning_title()}</h2>
 						{reasoningPanel}
@@ -262,6 +262,7 @@ function Game({
 						seed={seed}
 						onAgain={onAgain}
 						onNew={onNew}
+						onHome={home}
 					/>
 				)}
 			</div>
@@ -269,16 +270,14 @@ function Game({
 	);
 }
 
-/** The bar shows the bot's forecast when it has one, else the points already taken. */
 function Bar({ state }: { state: GameState }) {
-	const expected = forecast(state.reasoning);
 	const points = state.view!.points;
 	return (
 		<div className="flex shrink-0 pt-2 pb-[calc(var(--hand-h)*0.42)] lg:pb-2">
 			<PointsBar
-				bot={expected ?? points[BOT]}
-				you={expected === null ? points[0] : 120 - expected}
-				forecast={expected !== null}
+				bot={points[BOT]}
+				you={points[0]}
+				forecast={forecast(state.reasoning)}
 			/>
 		</div>
 	);

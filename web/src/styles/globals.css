@@ -63,6 +63,12 @@
 	p {
 		text-wrap: pretty;
 	}
+	/* Tailwind 4 leaves buttons with the default cursor. */
+	button:not(:disabled),
+	summary,
+	[role="button"] {
+		cursor: pointer;
+	}
 	:focus-visible {
 		outline: 2px solid var(--color-text);
 		outline-offset: 3px;

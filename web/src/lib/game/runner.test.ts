@@ -67,8 +67,10 @@ function fakeEngine(): Engine {
 describe("GameRunner", () => {
 	it("hands the turn to the bot, shows the trick it wins and records why it played its card", async () => {
 		const waits: number[] = [];
+		const shownHands: number[][] = [];
 		const runner = new GameRunner(fakeEngine(), async ms => {
 			waits.push(ms);
+			shownHands.push(runner.state.view!.hand.map(c => c.index));
 		});
 		await runner.start(1, "hard", 2);
 		expect(runner.state.phase).toBe("player");
@@ -77,10 +79,13 @@ describe("GameRunner", () => {
 		// The bot is seen thinking for its minimum time, then the trick it won stays on the table.
 		expect(waits[0]).toBeGreaterThan(1000);
 		expect(waits[1]).toBe(TRICK_MS);
+		// The card drawn after the trick appears only once the trick has left the table.
+		expect(shownHands[1]).toEqual([2, 3]);
 		expect(runner.state.moves).toEqual([{ trick: 0, card: card(5), reasoning }]);
 		expect(runner.state.reasoning).toEqual(reasoning);
 		expect(runner.state.lastTrick).toBeNull();
 		expect(runner.state.view?.tricks).toHaveLength(1);
+		expect(runner.state.view?.hand.map(c => c.index)).toEqual([2, 3, 4]);
 	});
 
 	it("ignores a card played out of turn", async () => {

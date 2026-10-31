@@ -5,9 +5,8 @@ const TOTAL = 120;
 
 /**
  * The 120-point bar (DESIGN.md, "The 120-point bar"): a thin track from the bot at the top to the player at the
- * bottom, the bot's share in blue from the top, the player's in white from the bottom, the 61-point notch in orange
- * and the bot's figure in a glass cursor.
- * `forecast` says whether the figures are the bot's forecast or the points already taken.
+ * bottom, the points each has taken filling it from their end, the 61-point notch in orange and the bot's points in
+ * a glass cursor. `forecast`, when the bot has one, is a ring at the points it expects to end with.
  */
 export function PointsBar({
 	bot,
@@ -16,12 +15,12 @@ export function PointsBar({
 }: {
 	bot: number;
 	you: number;
-	forecast: boolean;
+	forecast: number | null;
 }) {
-	const share = `${(bot / TOTAL) * 100}%`;
-	const yours = `${(you / TOTAL) * 100}%`;
-	const win = `${(WIN / TOTAL) * 100}%`;
-	const label = forecast ? m.bar_forecast({ bot, you }) : m.bar_taken({ bot, you });
+	const at = (points: number) => `${(points / TOTAL) * 100}%`;
+	const label =
+		m.bar_taken({ bot, you }) +
+		(forecast === null ? "" : ` ${m.bar_forecast({ points: Math.round(forecast) })}`);
 	return (
 		<div
 			role="img"
@@ -33,29 +32,41 @@ export function PointsBar({
 				<div className="absolute inset-y-0 left-0 w-1 rounded-full bg-[#3a4852]">
 					<div
 						className="bg-data absolute inset-x-0 top-0 rounded-full transition-[height] duration-300 ease-out"
-						style={{ height: share }}
+						style={{ height: at(bot) }}
 					/>
 					<div
 						className="bg-text/85 absolute inset-x-0 bottom-0 rounded-full transition-[height] duration-300 ease-out"
-						style={{ height: yours }}
+						style={{ height: at(you) }}
 					/>
 				</div>
-				<div className="bg-signal absolute -left-2.5 h-0.5 w-11" style={{ top: win }} />
+				<div
+					className="bg-signal absolute -left-2.5 h-0.5 w-11"
+					style={{ top: at(WIN) }}
+				/>
 				<span
 					className="text-signal absolute left-5 -translate-y-[130%] font-mono text-xs"
-					style={{ top: win }}
+					style={{ top: at(WIN) }}
 				>
 					{WIN}
 				</span>
 				<span
 					className="glass text-data absolute -left-3.5 flex h-7 -translate-y-1/2 items-center rounded-full px-2 font-mono text-sm transition-[top] duration-300 ease-out"
-					style={{ top: share }}
+					style={{ top: at(bot) }}
 				>
-					{Math.round(bot)}
+					{bot}
 				</span>
+				{forecast !== null && (
+					<span
+						className="absolute -left-[5px] flex -translate-y-1/2 items-center gap-1.5 transition-[top] duration-300 ease-out"
+						style={{ top: at(forecast) }}
+					>
+						<span className="border-data bg-ground size-3.5 rounded-full border-2" />
+						<span className="text-data font-mono text-xs">≈{Math.round(forecast)}</span>
+					</span>
+				)}
 			</div>
 			<span className="text-text-soft text-sm">
-				{m.game_you()} <span className="text-text font-mono">{Math.round(you)}</span>
+				{m.game_you()} <span className="text-text font-mono">{you}</span>
 			</span>
 		</div>
 	);

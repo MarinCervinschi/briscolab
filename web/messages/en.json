@@ -32,7 +32,7 @@
 	"game_loading": "The engine is getting ready",
 	"game_error": "The game stopped: {message}",
 	"game_play_card": "Play {card}",
-	"bar_forecast": "The bot expects {bot} points of 120, you {you}; 61 wins",
+	"bar_forecast": "The bot expects to end with {points}.",
 	"bar_taken": "The bot has taken {bot} points, you {you}; 61 wins",
 	"reasoning_title": "The reasoning",
 	"reasoning_none": "The bot has not played yet.",
@@ -90,5 +90,10 @@
 	"game_abandon": "Abandon",
 	"game_abandon_title": "Abandon the game?",
 	"game_abandon_body": "The game ends here and is not saved. You go back to the start.",
-	"game_keep_playing": "Keep playing"
+	"game_keep_playing": "Keep playing",
+	"result_home": "Back to the start",
+	"result_margin_win": "{points} points more than the bot",
+	"result_margin_loss": "You were {points} points short of 61",
+	"result_margin_draw": "Neither player reaches 61",
+	"result_tricks": "Tricks: {you} yours, {bot} the bot's"
 }

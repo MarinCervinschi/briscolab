@@ -130,12 +130,15 @@ No table surface: the cards sit on the ground.
 
 ## The 120-point bar (filo)
 
-- A 4 px track from the bot (top) to the player (bottom). Blue fills it from the top up to the bot's forecast;
-  the rest is a lighter track.
+- A 4 px track from the bot (top) to the player (bottom). Blue fills it from the top with the points the bot has
+  taken; white fills it from the bottom with the player's. The rest is the points still in play.
 - The 61-point line is a 2 px `signal` notch that sticks out of the track, with "61" beside it.
-- The forecast sits in a glass cursor on the boundary ("66"). It slides while the bot thinks.
-- "Bot" labels the top end; "Tu" and the player's share label the bottom end.
-- It reads as an image for a screen reader: "Il bot prevede 66 punti su 120, tu 54; si vince da 61."
+- The bot's points sit in a glass cursor at the end of the blue fill ("15").
+- When the bot has a forecast (Esperto, and Difficile with the deck empty), a blue ring marks on the track the points
+  it expects to end with, labelled "≈74". It slides while the bot thinks.
+- "Bot" labels the top end; "Tu" and the player's points label the bottom end.
+- It reads as an image for a screen reader: "Il bot ha preso 15 punti, tu 46; si vince da 61. Il bot prevede di
+  chiudere con 74."
 
 ## The bot's reasoning
 

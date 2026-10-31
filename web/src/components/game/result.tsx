@@ -1,3 +1,8 @@
+import { useEffect, useState } from "react";
+
+import { animate } from "motion";
+import { motion } from "motion/react";
+
 import type { Reasoning, View } from "@/engine/types";
 import { cardName } from "@/lib/cards";
 import { cn } from "@/lib/cn";
@@ -6,110 +11,241 @@ import { BOT, type BotMove } from "@/lib/game/runner";
 import { m } from "@/paraglide/messages";
 
 import { CardFace } from "./card";
+import { reducedMotion } from "./moving-card";
 import { ReasoningView } from "./reasoning-view";
 
-/** The end of a game: the score, two ways on, and every trick with the bot's reasoning behind its card. */
+/** The end of a game: the outcome, the score, three ways on, and every trick with the bot's reasoning behind its card. */
 export function Result({
 	view,
 	moves,
 	seed,
 	onAgain,
 	onNew,
+	onHome,
 }: {
 	view: View;
 	moves: BotMove[];
 	seed: number;
 	onAgain: () => void;
 	onNew: () => void;
+	onHome: () => void;
 }) {
 	const [you, bot] = [view.points[0], view.points[BOT]];
+	const winner = view.outcome?.winner ?? null;
 	const title =
-		view.outcome?.winner === 0
-			? m.result_win()
-			: view.outcome?.winner === BOT
-				? m.result_loss()
-				: m.result_draw();
+		winner === 0 ? m.result_win() : winner === BOT ? m.result_loss() : m.result_draw();
+	const margin =
+		winner === 0
+			? m.result_margin_win({ points: you - bot })
+			: winner === BOT
+				? m.result_margin_loss({ points: 61 - you })
+				: m.result_margin_draw();
+	const tricks = (seat: number) => view.tricks.filter(t => t.winner === seat).length;
 	return (
 		<div className="bg-ground/80 fixed inset-0 z-40 overflow-y-auto backdrop-blur-sm">
-			<section
+			<motion.section
 				role="dialog"
 				aria-labelledby="result-title"
-				className="bg-surface mx-auto my-6 flex max-w-2xl flex-col gap-8 rounded-[28px] p-6 sm:my-12 sm:p-8"
+				initial={{ opacity: 0, y: 28, scale: 0.98 }}
+				animate={{ opacity: 1, y: 0, scale: 1 }}
+				transition={{ type: "spring", duration: 0.6, bounce: 0.2 }}
+				className="bg-surface mx-auto my-4 flex max-w-3xl flex-col gap-10 overflow-hidden rounded-[32px] sm:my-10"
 			>
-				<div className="flex flex-col gap-3">
-					<h2 id="result-title" className="text-5xl font-bold tracking-[-0.035em]">
-						{title}
-					</h2>
-					<p className="font-mono text-2xl">{m.result_score({ you, bot })}</p>
-					<p className="text-text-soft text-sm">{m.result_seed({ seed })}</p>
-				</div>
-				<div className="flex flex-wrap gap-3">
-					<button
-						type="button"
-						onClick={onNew}
-						className="bg-text text-ground h-11 rounded-full px-6 font-semibold transition-transform active:scale-95"
-					>
-						{m.result_new()}
-					</button>
-					<button
-						type="button"
-						onClick={onAgain}
-						className="bg-raised h-11 rounded-full px-6 font-medium transition-transform active:scale-95"
-					>
-						{m.result_again()}
-					</button>
+				<div
+					className={cn(
+						"relative flex flex-col gap-7 p-6 sm:p-10",
+						winner === 0 &&
+							"bg-[radial-gradient(ellipse_at_85%_0%,rgb(252_115_77/0.28),transparent_60%)]",
+						winner === BOT &&
+							"bg-[radial-gradient(ellipse_at_85%_0%,rgb(2_151_222/0.26),transparent_60%)]"
+					)}
+				>
+					<div className="flex items-end justify-between gap-6">
+						<div className="flex flex-col gap-3">
+							<h2
+								id="result-title"
+								className={cn(
+									"text-5xl font-bold tracking-[-0.045em] sm:text-6xl",
+									winner === 0 && "text-signal",
+									winner === BOT && "text-data"
+								)}
+							>
+								{title}
+							</h2>
+							<p className="text-text-soft text-lg">{margin}</p>
+						</div>
+						{winner !== null && <Trophy view={view} winner={winner} />}
+					</div>
+
+					<Score you={you} bot={bot} />
+
+					<p className="text-text-soft text-sm">
+						{m.result_tricks({ you: tricks(0), bot: tricks(BOT) })} ·{" "}
+						{m.result_seed({ seed })}
+					</p>
+
+					<div className="flex flex-wrap gap-3">
+						<button
+							type="button"
+							onClick={onNew}
+							className="bg-text text-ground h-12 rounded-full px-6 font-semibold transition-transform active:scale-95"
+						>
+							{m.result_new()}
+						</button>
+						<button
+							type="button"
+							onClick={onAgain}
+							className="bg-raised h-12 rounded-full px-6 font-medium transition-transform active:scale-95"
+						>
+							{m.result_again()}
+						</button>
+						<button
+							type="button"
+							onClick={onHome}
+							className="text-text-soft hover:text-text h-12 rounded-full px-4 font-medium transition-colors"
+						>
+							{m.result_home()}
+						</button>
+					</div>
 				</div>
 
-				<section className="flex flex-col gap-3">
-					<h3 className="text-lg font-semibold">{m.result_replay()}</h3>
-					<ol className="flex flex-col gap-2">
-						{view.tricks.map((trick, i) => {
-							const move = moves.find(mv => mv.trick === i);
-							return (
-								<li
-									key={i}
-									className="bg-ground/60 flex flex-col gap-3 rounded-2xl p-3"
-								>
-									<div className="flex items-center gap-3">
-										<span className="text-text-soft w-16 text-sm">
-											{m.result_trick({ n: i + 1 })}
-										</span>
-										{trick.cards.map((card, j) => (
-											<CardFace
-												key={card.index}
-												card={card}
-												className={cn(
-													"h-14 w-9 rounded-[6px] [&_span]:hidden",
-													(trick.leader + j) % 2 === trick.winner &&
-														"outline-text outline-2 outline-offset-1"
-												)}
-											/>
-										))}
-										<span className="ml-auto text-right text-sm">
-											{trick.winner === BOT ? m.game_bot() : m.game_you()} ·{" "}
-											{trick.points}
-										</span>
-									</div>
-									{move && (
-										<details className="group">
-											<summary className="text-text-soft cursor-pointer text-sm">
-												{cardName(move.card)} · {summary(move.reasoning)}
-											</summary>
-											<div className="pt-4">
-												<ReasoningView
-													reasoning={move.reasoning}
-													revealed
-													onReveal={() => {}}
+				<div className="flex flex-col gap-10 px-6 pb-6 sm:px-10 sm:pb-10">
+					<section className="flex flex-col gap-3">
+						<h3 className="text-lg font-semibold">{m.result_replay()}</h3>
+						<ol className="flex flex-col gap-2">
+							{view.tricks.map((trick, i) => {
+								const move = moves.find(mv => mv.trick === i);
+								return (
+									<li
+										key={i}
+										className="bg-ground/60 flex flex-col gap-3 rounded-2xl p-3"
+									>
+										<div className="flex items-center gap-3">
+											<span className="text-text-soft w-16 text-sm">
+												{m.result_trick({ n: i + 1 })}
+											</span>
+											{trick.cards.map((card, j) => (
+												<CardFace
+													key={card.index}
+													card={card}
+													className={cn(
+														"h-14 w-9 rounded-[6px] [&_span]:hidden",
+														(trick.leader + j) % 2 === trick.winner &&
+															"outline-text outline-2 outline-offset-1"
+													)}
 												/>
-											</div>
-										</details>
-									)}
-								</li>
-							);
-						})}
-					</ol>
-				</section>
-			</section>
+											))}
+											<span className="ml-auto text-right text-sm">
+												{trick.winner === BOT ? m.game_bot() : m.game_you()} ·{" "}
+												{trick.points}
+											</span>
+										</div>
+										{move && (
+											<details className="group">
+												<summary className="text-text-soft cursor-pointer text-sm">
+													{cardName(move.card)} · {summary(move.reasoning)}
+												</summary>
+												<div className="pt-4">
+													<ReasoningView
+														reasoning={move.reasoning}
+														revealed
+														onReveal={() => {}}
+													/>
+												</div>
+											</details>
+										)}
+									</li>
+								);
+							})}
+						</ol>
+					</section>
+				</div>
+			</motion.section>
+		</div>
+	);
+}
+
+/** The final score counting up, over the 120-point track with its 61-point notch. */
+function Score({ you, bot }: { you: number; bot: number }) {
+	const [shown, setShown] = useState(reducedMotion() ? 1 : 0);
+	useEffect(() => {
+		if (reducedMotion()) return;
+		const controls = animate(0, 1, {
+			duration: 1.1,
+			delay: 0.25,
+			ease: [0.22, 1, 0.36, 1],
+			onUpdate: setShown,
+		});
+		return () => controls.stop();
+	}, []);
+	return (
+		<div className="flex flex-col gap-3">
+			<div className="flex items-end justify-between font-mono">
+				<span className="flex flex-col">
+					<span className="text-text-soft font-sans text-sm">{m.game_you()}</span>
+					<span className="text-5xl tabular-nums sm:text-6xl">
+						{Math.round(you * shown)}
+					</span>
+				</span>
+				<span className="flex flex-col items-end">
+					<span className="text-text-soft font-sans text-sm">{m.game_bot()}</span>
+					<span className="text-data text-5xl tabular-nums sm:text-6xl">
+						{Math.round(bot * shown)}
+					</span>
+				</span>
+			</div>
+			<div className="relative h-2">
+				<div className="bg-raised absolute inset-0 rounded-full" />
+				<div
+					className="bg-text absolute inset-y-0 left-0 rounded-full"
+					style={{ width: `${((you * shown) / 120) * 100}%` }}
+				/>
+				<div
+					className="bg-data absolute inset-y-0 right-0 rounded-full"
+					style={{ width: `${((bot * shown) / 120) * 100}%` }}
+				/>
+				<div
+					className="bg-signal absolute -inset-y-1.5 w-0.5"
+					style={{ left: `${(61 / 120) * 100}%` }}
+				/>
+			</div>
+		</div>
+	);
+}
+
+/** The winner's richest cards, fanned out in the corner. */
+function Trophy({ view, winner }: { view: View; winner: number }) {
+	const cards = view.tricks
+		.filter(t => t.winner === winner)
+		.flatMap(t => t.cards)
+		.filter(c => c.points > 0)
+		.sort((a, b) => b.points - a.points)
+		.slice(0, 5);
+	const mid = (cards.length - 1) / 2;
+	return (
+		<div
+			aria-hidden="true"
+			className="pointer-events-none relative hidden h-36 w-48 shrink-0 sm:block"
+		>
+			{cards.map((card, i) => (
+				<motion.span
+					key={card.index}
+					className="absolute bottom-0 left-1/2 -ml-[42px] block origin-bottom"
+					initial={{ rotate: 0, y: 40, opacity: 0 }}
+					animate={{ rotate: (i - mid) * 11, y: 0, opacity: 1 }}
+					transition={{
+						type: "spring",
+						bounce: 0.35,
+						duration: 0.8,
+						delay: 0.3 + i * 0.07,
+					}}
+				>
+					<CardFace
+						card={card}
+						className="h-[138px] w-[84px] shadow-[0_14px_30px_-8px_rgb(0_0_0/0.7)]"
+					/>
+				</motion.span>
+			))}
 		</div>
 	);
 }

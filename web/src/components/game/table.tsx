@@ -70,6 +70,7 @@ export function BotHand({
 }) {
 	const places = usePlaces();
 	const row = useRef<HTMLDivElement>(null);
+	// Each back sits in a slot that never moves, so a back still arriving from the deck is measured in its place.
 	useEffect(() => {
 		places.botHand = [...(row.current?.children ?? [])].map(el =>
 			el.getBoundingClientRect()
@@ -79,13 +80,14 @@ export function BotHand({
 		<div ref={row} className="flex min-h-(--back-h) gap-2 lg:justify-center lg:gap-3">
 			{stage !== "shuffle" &&
 				Array.from({ length: view.handLens[BOT] }, (_, i) => (
-					<MovingCard
-						key={i}
-						label={label}
-						from={() => places.deck}
-						delay={stage === "deal" ? dealDelay(BOT, i) : drawDelay(view, BOT)}
-						className="h-(--back-h) w-[calc(var(--back-h)*0.61)]"
-					/>
+					<span key={i} className="block">
+						<MovingCard
+							label={label}
+							from={() => places.deck}
+							delay={stage === "deal" ? dealDelay(BOT, i) : drawDelay(view, BOT)}
+							className="h-(--back-h) w-[calc(var(--back-h)*0.61)]"
+						/>
+					</span>
 				))}
 		</div>
 	);
@@ -105,7 +107,8 @@ export function Status({
 	if (phase === "player") text = m.game_your_turn();
 	if (phase === "bot")
 		text =
-			reasoning?.kind === "search"
+			// A finished search is the one behind the last card, still on screen until the new one reports.
+			reasoning?.kind === "search" && reasoning.iterations < reasoning.budget
 				? m.game_bot_thinking_iterations({
 						done: reasoning.iterations,
 						total: reasoning.budget,
@@ -345,49 +348,50 @@ export function Hand({
 			[...buttons.current].map(([index, el]) => [index, el.getBoundingClientRect()])
 		);
 	});
-	if (stage === "shuffle") return <div className="h-(--hand-h)" />;
+	// The row keeps its height when the hand is empty, at the end, so the table does not move.
 	return (
-		<div className="relative z-10 flex justify-center gap-2.5 lg:gap-4">
-			{view.hand.map((card, i) => (
-				<motion.div
-					layout
-					transition={{ duration: 0.3 }}
-					key={card.index}
-					className="flex flex-col items-center gap-2"
-				>
-					<button
-						type="button"
-						ref={el => {
-							if (el) buttons.current.set(card.index, el);
-							else buttons.current.delete(card.index);
-						}}
-						disabled={!canPlay}
-						onClick={() => onPlay(card)}
-						aria-label={m.game_play_card({ card: cardName(card) })}
-						className="group relative rounded-[12px] transition-[translate,scale] duration-200 ease-out enabled:hover:-translate-y-4 enabled:hover:scale-[1.03] enabled:focus-visible:-translate-y-4 enabled:active:scale-[0.97] disabled:cursor-default"
+		<div className="relative z-10 flex min-h-(--hand-h) justify-center gap-2.5 lg:gap-4">
+			{stage !== "shuffle" &&
+				view.hand.map((card, i) => (
+					<motion.div
+						layout
+						transition={{ duration: 0.3 }}
+						key={card.index}
+						className="flex flex-col items-center gap-2"
 					>
-						<MovingCard
-							card={card}
-							turn
-							from={() => places.deck}
-							delay={stage === "deal" ? dealDelay(0, i) : drawDelay(view, 0)}
-							className="h-(--hand-h) w-[calc(var(--hand-h)*0.61)] rounded-[12px] shadow-[0_18px_40px_-14px_rgb(0_0_0/0.8)]"
-						/>
-						<span
-							aria-hidden="true"
-							className="border-signal pointer-events-none absolute -inset-[5px] rounded-[16px] border-2 opacity-0 shadow-[0_0_0_5px_rgb(252_115_77/0.14),0_24px_44px_-14px_rgb(252_115_77/0.6)] transition-opacity duration-200 group-enabled:group-hover:opacity-100 group-enabled:group-focus-visible:opacity-100"
-						/>
-					</button>
-					<kbd
-						className={cn(
-							"hidden font-mono text-sm transition-colors lg:block",
-							canPlay ? "text-text-soft" : "text-text-faint"
-						)}
-					>
-						{i + 1}
-					</kbd>
-				</motion.div>
-			))}
+						<button
+							type="button"
+							ref={el => {
+								if (el) buttons.current.set(card.index, el);
+								else buttons.current.delete(card.index);
+							}}
+							disabled={!canPlay}
+							onClick={() => onPlay(card)}
+							aria-label={m.game_play_card({ card: cardName(card) })}
+							className="group relative rounded-[12px] transition-[translate,scale] duration-200 ease-out enabled:hover:-translate-y-4 enabled:hover:scale-[1.03] enabled:focus-visible:-translate-y-4 enabled:active:scale-[0.97] disabled:cursor-default"
+						>
+							<MovingCard
+								card={card}
+								turn
+								from={() => places.deck}
+								delay={stage === "deal" ? dealDelay(0, i) : drawDelay(view, 0)}
+								className="h-(--hand-h) w-[calc(var(--hand-h)*0.61)] rounded-[12px] shadow-[0_18px_40px_-14px_rgb(0_0_0/0.8)]"
+							/>
+							<span
+								aria-hidden="true"
+								className="border-signal pointer-events-none absolute -inset-[5px] rounded-[16px] border-2 opacity-0 shadow-[0_0_0_5px_rgb(252_115_77/0.14),0_24px_44px_-14px_rgb(252_115_77/0.6)] transition-opacity duration-200 group-enabled:group-hover:opacity-100 group-enabled:group-focus-visible:opacity-100"
+							/>
+						</button>
+						<kbd
+							className={cn(
+								"hidden font-mono text-sm transition-colors lg:block",
+								canPlay ? "text-text-soft" : "text-text-faint"
+							)}
+						>
+							{i + 1}
+						</kbd>
+					</motion.div>
+				))}
 		</div>
 	);
 }
