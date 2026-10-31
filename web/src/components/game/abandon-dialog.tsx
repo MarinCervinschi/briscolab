@@ -33,19 +33,19 @@ export function AbandonDialog({
 				<p id="abandon-body" className="text-text-soft leading-relaxed">
 					{m.game_abandon_body()}
 				</p>
-				<div className="mt-2 flex flex-wrap justify-end gap-3">
+				<div className="mt-2 flex flex-col gap-3 sm:flex-row sm:justify-end">
 					<button
 						type="button"
 						autoFocus
 						onClick={onStay}
-						className="bg-raised h-11 rounded-full px-5 font-medium transition-transform active:scale-95"
+						className="bg-raised h-11 rounded-full px-5 font-medium whitespace-nowrap transition-transform active:scale-95"
 					>
 						{m.game_keep_playing()}
 					</button>
 					<button
 						type="button"
 						onClick={onLeave}
-						className="bg-signal text-ground h-11 rounded-full px-5 font-semibold transition-transform active:scale-95"
+						className="bg-signal text-ground h-11 rounded-full px-5 font-semibold whitespace-nowrap transition-transform active:scale-95"
 					>
 						{m.game_abandon()}
 					</button>
