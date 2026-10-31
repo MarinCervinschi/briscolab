@@ -24,7 +24,7 @@ function Home() {
 					<li key={level.id}>
 						<Link
 							to="/play"
-							search={{ level: level.id }}
+							search={{ level: level.id, seed: undefined }}
 							className="bg-surface hover:bg-raised flex h-28 flex-col justify-between rounded-[20px] p-5 transition-colors"
 						>
 							<span className="text-lg font-semibold">{level.name()}</span>
