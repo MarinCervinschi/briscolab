@@ -2,10 +2,17 @@ import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
+import { readFileSync } from "node:fs";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+// The engine's version, from the workspace that the WebAssembly module is built from.
+const engineVersion = /\[workspace\.package\][^[]*?version = "([^"]+)"/.exec(
+	readFileSync(new URL("../engine/Cargo.toml", import.meta.url), "utf8")
+)![1];
+
 export default defineConfig({
+	define: { __ENGINE_VERSION__: JSON.stringify(engineVersion) },
 	resolve: { tsconfigPaths: true },
 	// The engine's worker imports the WebAssembly module, so it is built as an ES module.
 	worker: { format: "es" },
@@ -24,7 +31,14 @@ export default defineConfig({
 				crawlLinks: true,
 				filter: ({ path }) => !path.includes("?"),
 			},
-			pages: [{ path: "/" }, { path: "/en" }, { path: "/play" }, { path: "/en/play" }],
+			pages: [
+				{ path: "/" },
+				{ path: "/en" },
+				{ path: "/play" },
+				{ path: "/en/play" },
+				{ path: "/credits" },
+				{ path: "/en/credits" },
+			],
 		}),
 		viteReact(),
 		// Only the manifest and registerSW.js: scripts/sw.mjs writes the service worker after the build.

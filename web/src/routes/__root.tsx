@@ -1,6 +1,7 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 
 import { NotFoundPage } from "@/components/not-found";
+import { umamiScript } from "@/lib/analytics";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 import globalsCss from "@/styles/globals.css?url";
@@ -23,7 +24,10 @@ export const Route = createRootRoute({
 			{ rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
 			{ rel: "manifest", href: "/manifest.webmanifest" },
 		],
-		scripts: [{ src: "/registerSW.js", defer: true }],
+		scripts: [
+			{ src: "/registerSW.js", defer: true },
+			...(umamiScript ? [umamiScript] : []),
+		],
 	}),
 	shellComponent: RootDocument,
 	component: Outlet,

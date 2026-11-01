@@ -20,6 +20,9 @@ COPY web/package.json web/pnpm-lock.yaml web/
 RUN cd web && pnpm install --frozen-lockfile
 COPY engine engine
 COPY web web
+# Umami's script and site, given by the deploy; without them the site sends no analytics.
+ARG VITE_UMAMI_SCRIPT_URL
+ARG VITE_UMAMI_WEBSITE_ID
 # The prerender starts a server on localhost and fetches 127.0.0.1; in a container localhost resolves to ::1 first.
 RUN cd web && NODE_OPTIONS=--dns-result-order=ipv4first pnpm build
 

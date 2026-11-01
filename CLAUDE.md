@@ -110,6 +110,9 @@ MLFLOW_TRACKING_URI=http://100.89.8.106:5000 uv run briscolab-arena --deals 1000
   for at least 1.2 s of visible thinking (skippable) and a won trick for 1.2 s (with the cards drawn after it still on the deck, `beforeDrawing`), and records the bot's reasoning per
   card for the replay. Components read it through `useGame`; `/play?level=…&seed=…` names a game, and a game
   without a seed gets one in the URL.
+- Umami (`src/lib/analytics.ts`) counts page views and sends one `game_end` event per finished game. Its script's
+  address and site id are build arguments (`VITE_UMAMI_SCRIPT_URL`, `VITE_UMAMI_WEBSITE_ID`) set by the deploy; without
+  them nothing is sent. `/credits` holds the card and icon credits and the privacy note.
 
 ```bash
 cd web

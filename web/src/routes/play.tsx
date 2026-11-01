@@ -19,6 +19,7 @@ import {
 	Status,
 	TableCards,
 } from "@/components/game/table";
+import { ENGINE_VERSION, trackGameEnd } from "@/lib/analytics";
 import { forecast } from "@/lib/game/reasoning";
 import { BOT, type GameState } from "@/lib/game/runner";
 import { useGame } from "@/lib/game/use-game";
@@ -109,6 +110,22 @@ function Game({
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
 	}, [canPlay, view, runner]);
+
+	// One event when the game ends (SPEC.md, decision 13); a game abandoned sends nothing.
+	const over = state?.phase === "over";
+	useEffect(() => {
+		if (!over || !view) return;
+		const winner = view.outcome?.winner;
+		trackGameEnd({
+			bot: level.engine,
+			engine: ENGINE_VERSION,
+			level: level.id,
+			winner: winner === 0 ? "player" : winner === BOT ? "bot" : "draw",
+			margin: view.points[0] - view.points[BOT],
+			revealed,
+		});
+		// Sent once, when the game is over; later changes to the page are not part of it.
+	}, [over]);
 
 	if (!state || !view || !runner) {
 		return (

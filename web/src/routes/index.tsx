@@ -33,6 +33,14 @@ function Home() {
 					</li>
 				))}
 			</ul>
+			<footer className="text-text-soft mt-auto pt-8 text-sm">
+				<Link
+					to="/credits"
+					className="hover:text-text underline-offset-4 hover:underline"
+				>
+					{m.home_credits()}
+				</Link>
+			</footer>
 		</main>
 	);
 }

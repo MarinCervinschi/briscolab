@@ -95,5 +95,16 @@
 	"result_margin_win": "{points} punti più del bot",
 	"result_margin_loss": "Ti sono mancati {points} punti per arrivare a 61",
 	"result_margin_draw": "Nessuno arriva a 61",
-	"result_tricks": "Prese: {you} tue, {bot} del bot"
+	"result_tricks": "Prese: {you} tue, {bot} del bot",
+	"credits_title": "Crediti e privacy",
+	"privacy_title": "Cosa raccogliamo",
+	"privacy_body": "Il sito usa Umami, sul nostro server, per contare le visite alle pagine e le partite finite. Umami non usa cookie e non salva indirizzi IP né altri dati che identificano una persona.",
+	"privacy_event": "A fine partita il sito invia un solo evento con il bot, la versione del motore, il livello, chi ha vinto, lo scarto di punti e se hai guardato le carte del bot. Le mosse non vengono inviate.",
+	"credits_icon_title": "L'icona",
+	"credits_icon_body": "L'icona di Briscolab è ridisegnata a partire da",
+	"credits_code_title": "Il codice",
+	"credits_code_body": "Il motore, i bot e il sito sono open source, con licenza MIT:",
+	"credits_cards_title": "Le carte",
+	"credits_cards_body": "Le carte sono il mazzo napoletano di Wikimedia Commons, di Trocche100, in pubblico dominio. Le abbiamo ripulite dai segni di stampa. Ecco ogni file con la sua fonte.",
+	"home_credits": "Crediti e privacy"
 }

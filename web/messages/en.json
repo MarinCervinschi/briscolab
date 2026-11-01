@@ -95,5 +95,16 @@
 	"result_margin_win": "{points} points more than the bot",
 	"result_margin_loss": "You were {points} points short of 61",
 	"result_margin_draw": "Neither player reaches 61",
-	"result_tricks": "Tricks: {you} yours, {bot} the bot's"
+	"result_tricks": "Tricks: {you} yours, {bot} the bot's",
+	"credits_title": "Credits and privacy",
+	"privacy_title": "What we collect",
+	"privacy_body": "The site uses Umami, on our own server, to count page views and finished games. Umami sets no cookies and stores no IP addresses or other data that identify a person.",
+	"privacy_event": "At the end of a game the site sends one event with the bot, the engine version, the level, who won, the point difference and whether you looked at the bot's cards. The moves are not sent.",
+	"credits_icon_title": "The icon",
+	"credits_icon_body": "Briscolab's icon is redrawn from",
+	"credits_code_title": "The code",
+	"credits_code_body": "The engine, the bots and the site are open source, under the MIT licence:",
+	"credits_cards_title": "The cards",
+	"credits_cards_body": "The cards are the Naples deck on Wikimedia Commons, by Trocche100, in the public domain. We cleaned off the printer's marks. Here is every file with its source.",
+	"home_credits": "Credits and privacy"
 }
