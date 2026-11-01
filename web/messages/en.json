@@ -69,6 +69,7 @@
 	"result_new": "New game",
 	"result_replay": "The game, trick by trick",
 	"result_trick": "Trick {n}",
+	"result_decided": "Settled at trick {n}: the tricks left could not change the result",
 	"result_seed": "Game {seed}",
 	"card_name": "{rank} of {suit}",
 	"rank_1": "Ace",

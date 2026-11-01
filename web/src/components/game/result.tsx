@@ -108,6 +108,11 @@ export function Result({
 							: m.result_tricks({ you: tricks(0), bot: tricks(BOT) })}{" "}
 						· {m.result_seed({ seed })}
 					</p>
+					{view.tricks.length < 20 && (
+						<p className="text-text-soft -mt-4 text-sm">
+							{m.result_decided({ n: view.tricks.length })}
+						</p>
+					)}
 
 					<div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
 						<button

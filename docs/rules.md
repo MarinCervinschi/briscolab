@@ -40,6 +40,7 @@ The rules the engine implements. Anything not written here is not a rule.
 ## End
 
 After 20 tricks the players count the points in the cards they took. More than 60 wins; 60–60 is a draw.
+A player who has taken more than 60 points has won, whatever the tricks left hold, so the game is settled then.
 
 ## What a player knows
 

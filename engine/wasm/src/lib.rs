@@ -59,7 +59,13 @@ impl Session {
     pub fn view(&self, seat: u8) -> Result<String, JsError> {
         let player = seat_player(seat)?;
         let obs = self.game.observation(player);
-        let outcome = self.game.outcome().map(|o| match o {
+        // The site ends a game as soon as it is settled.
+        let outcome = self
+            .game
+            .decided()
+            .map(Outcome::Win)
+            .or(self.game.outcome());
+        let outcome = outcome.map(|o| match o {
             Outcome::Win(p) => json!({ "winner": p.index() }),
             Outcome::Draw => json!({ "winner": null }),
         });

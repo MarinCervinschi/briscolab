@@ -231,6 +231,14 @@ impl Game {
         )
     }
 
+    /// The player who has taken more than half the points, at any trick: the tricks left cannot change the result.
+    pub fn decided(&self) -> Option<Player> {
+        let half = TOTAL_POINTS / 2;
+        Player::ALL
+            .into_iter()
+            .find(|p| self.taken[p.index()].points() > half)
+    }
+
     /// What `player` knows: the only view of the game a bot gets.
     pub fn observation(&self, player: Player) -> Observation {
         let mut played = CardSet::EMPTY;

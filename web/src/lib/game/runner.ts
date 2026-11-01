@@ -165,5 +165,7 @@ export function beforeDrawing(before: View, after: View): View {
 		handLens: [after.handLens[0] - drawn, after.handLens[1] - drawn],
 		deckLen: after.deckLen + 2 * drawn,
 		briscolaDrawnBy: before.briscolaDrawnBy,
+		// The trick's points count once its cards reach the pile.
+		points: before.points,
 	};
 }

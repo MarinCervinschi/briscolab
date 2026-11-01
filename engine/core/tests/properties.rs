@@ -124,6 +124,27 @@ fn every_trick_follows_the_winner_rules() {
 }
 
 #[test]
+fn a_game_settled_past_60_points_ends_with_that_win() {
+    for seed in 0..GAMES {
+        let mut game = Game::new(seed);
+        let mut bots = [RandomBot::new(seed ^ 0xa5a5), RandomBot::new(seed ^ 0x5a5a)];
+        let mut settled = None;
+        while let Some(player) = game.to_play() {
+            let card = bots[player.index()].act(&game.observation(player));
+            game.play(card).unwrap();
+            if let Some(winner) = settled {
+                assert_eq!(game.decided(), Some(winner), "seed {seed}");
+            }
+            settled = game.decided();
+        }
+        assert_eq!(
+            game.outcome(),
+            settled.map_or(Some(Outcome::Draw), |p| Some(Outcome::Win(p)))
+        );
+    }
+}
+
+#[test]
 fn the_briscola_is_drawn_last_by_the_loser_of_trick_17() {
     for seed in 0..GAMES {
         let game = checked_game(seed);

@@ -69,6 +69,7 @@
 	"result_new": "Nuova partita",
 	"result_replay": "La partita, presa per presa",
 	"result_trick": "Presa {n}",
+	"result_decided": "Decisa alla presa {n}: le prese rimaste non potevano cambiare il risultato",
 	"result_seed": "Partita {seed}",
 	"card_name": "{rank} di {suit}",
 	"rank_1": "Asso",
