@@ -7,6 +7,7 @@
 node_modules
 dist
 *.local
+CLAUDE.local.md
 
 # engine
 target/
@@ -18,9 +19,9 @@ pkg/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
-mlruns/
-runs/
-checkpoints/
+lab/mlruns/
+lab/runs/
+lab/checkpoints/
 
 # Terraform: providers and local state stay out; the lock file is committed.
 infra/**/.terraform/
