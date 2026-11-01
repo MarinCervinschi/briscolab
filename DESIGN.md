@@ -102,10 +102,9 @@ Every drawing comes from a fixed seed, so a back looks the same on every render.
 
 ## Icon
 
-Two cards after "Card" by wenwu zhang ([CC BY](https://www.behance.net/suiyuerugeca71)): cantaloupe behind,
-electric blue in front, and on the front card the search tree of the "Albero" back, with the line the bot keeps in
-orange. On midnight for the app icons, on nothing for the favicon. `pnpm icons` draws them; the credit goes on the
-credits page with the cards.
+Our own drawing, "Mano": a hand of three cards fanned out on midnight. Two backs in the "Tavola tecnica" plate with
+blue outlines, and the card being played in cantaloupe, with the branch the bot keeps drawn on it in midnight. The
+favicon, seen at 16 to 32 px, keeps two cards with thicker outlines and no branch. `pnpm icons` draws them all.
 
 ## The table
 

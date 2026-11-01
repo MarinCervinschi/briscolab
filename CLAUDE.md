@@ -112,7 +112,7 @@ MLFLOW_TRACKING_URI=http://100.89.8.106:5000 uv run briscolab-arena --deals 1000
   without a seed gets one in the URL.
 - Umami (`src/lib/analytics.ts`) counts page views and sends one `game_end` event per finished game. Its script's
   address and site id are build arguments (`VITE_UMAMI_SCRIPT_URL`, `VITE_UMAMI_WEBSITE_ID`) set by the deploy; without
-  them nothing is sent. `/credits` holds the card and icon credits and the privacy note.
+  them nothing is sent. `/credits` holds the card credits and the privacy note.
 
 ```bash
 cd web

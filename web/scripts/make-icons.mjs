@@ -1,6 +1,5 @@
-// `pnpm icons`: renders Briscolab's icons into public/. Two cards after "Card" by wenwu zhang (CC BY,
-// behance.net/suiyuerugeca71), recoloured: cantaloupe behind, electric blue in front, and on the front card the
-// search tree of the "Albero" back in place of the heart, with the line the bot keeps in orange.
+// `pnpm icons`: renders Briscolab's icons into public/. A hand of three cards fanned out: two backs in the blue of
+// the "Tavola tecnica" back, and the card being played in cantaloupe, with the line the bot keeps drawn on it.
 import { Resvg } from "@resvg/resvg-js";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -8,72 +7,59 @@ const out = new URL("../public", import.meta.url).pathname;
 mkdirSync(out, { recursive: true });
 
 const GROUND = "#02070A";
+const PLATE = "#04121C";
 const DATA = "#0297DE";
 const SIGNAL = "#FC734D";
-const PAPER = "#FBF8F1";
 
-const BACK = `<path d="M171.5 871.7l91.6-871.8 614.5 64.6-91.6 871.8-614.5-64.6Z" fill="${SIGNAL}"/>`;
-const FRONT = `<path d="M184.4 102h557.9a43.9 43.9 0 0 1 46 41.1v836.9a43.9 43.9 0 0 1-43.2 43.9H184.4A43.2 43.2 0 0 1 141.2 980V143.2A43.2 43.2 0 0 1 184.4 102z" fill="${DATA}"/>`;
+// In a 512 square. The backs are outlined only; the stroke thickens at small sizes so they still read.
+function hand({ stroke, tree }) {
+	const card = (x, y, angle, extra) =>
+		`<rect x="${x}" y="${y}" width="170" height="248" rx="20" transform="rotate(${angle} ${x + 85} ${y + 124})" ${extra}/>`;
+	const branch = tree
+		? `<g transform="rotate(14 323 228)" stroke="${GROUND}" stroke-width="10" stroke-linecap="round" fill="${GROUND}">` +
+			`<line x1="323" y1="172" x2="292" y2="232"/><line x1="323" y1="172" x2="354" y2="232"/>` +
+			`<line x1="354" y1="232" x2="340" y2="290"/><circle cx="323" cy="172" r="12"/>` +
+			`<circle cx="354" cy="232" r="11"/><circle cx="340" cy="290" r="11"/><circle cx="292" cy="232" r="9"/></g>`
+		: "";
+	return (
+		(tree
+			? card(
+					104,
+					168,
+					-16,
+					`fill="${PLATE}" stroke="${DATA}" stroke-width="${stroke}" stroke-opacity="0.55"`
+				)
+			: "") +
+		card(171, 136, 0, `fill="${PLATE}" stroke="${DATA}" stroke-width="${stroke}"`) +
+		card(238, 104, 14, `fill="${SIGNAL}"`) +
+		branch
+	);
+}
 
-// A binary search tree three levels deep, wider than tall at the bottom, so it reads as a tree and not a figure.
-const root = [465, 250];
-const level1 = [
-	[310, 470],
-	[620, 470],
-];
-const level2 = [
-	[225, 700],
-	[395, 700],
-	[535, 700],
-	[705, 700],
-];
-const level3 = [
-	[470, 910],
-	[600, 910],
-];
-const edges = [
-	[root, level1[0]],
-	[root, level1[1]],
-	[level1[0], level2[0]],
-	[level1[0], level2[1]],
-	[level1[1], level2[2]],
-	[level1[1], level2[3]],
-	[level2[2], level3[0]],
-	[level2[2], level3[1]],
-];
-const kept = [root, level1[1], level2[2], level3[1]];
-const line = ([x1, y1], [x2, y2], colour, width) =>
-	`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${colour}" stroke-width="${width}" stroke-linecap="round"/>`;
-const node = ([x, y], colour, r) =>
-	`<circle cx="${x}" cy="${y}" r="${r}" fill="${colour}"/>`;
-const TREE = [
-	...edges.map(([a, b]) => line(a, b, GROUND, 24)),
-	...kept.slice(1).map((p, i) => line(kept[i], p, SIGNAL, 32)),
-	...[root, ...level1, ...level2, ...level3].map(p => node(p, PAPER, 36)),
-	...kept.map(p => node(p, SIGNAL, 42)),
-].join("");
-
-// The drawing spans 141-878 by 0-1024; `scale` shrinks it around the centre of the square.
-function icon({ scale, ground }) {
-	const offset = 512 - 512 * scale;
-	const field = ground ? `<rect width="1024" height="1024" fill="${GROUND}"/>` : "";
-	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">${field}<g transform="translate(${offset} ${offset}) scale(${scale})">${BACK}${FRONT}${TREE}</g></svg>`;
+// `scale` shrinks the drawing around the centre; `radius` rounds the ground, for the favicon only (the systems round
+// the app icons themselves).
+function icon({ scale, radius, small = false }) {
+	const offset = 256 - 256 * scale;
+	const drawing = hand(small ? { stroke: 20, tree: false } : { stroke: 9, tree: true });
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="${radius}" fill="${GROUND}"/><g transform="translate(${offset} ${offset + 4}) scale(${scale})">${drawing}</g></svg>`;
 }
 
 const png = (svg, size) =>
 	new Resvg(svg, { fitTo: { mode: "width", value: size } }).render().asPng();
 
+// The favicon is seen at 16 to 32 px: two cards, no tree, thicker outlines.
 writeFileSync(
 	`${out}/favicon.svg`,
-	`<!-- After "Card" by wenwu zhang, CC BY: https://www.behance.net/suiyuerugeca71 -->\n${icon({ scale: 0.96, ground: false })}\n`
+	`${icon({ scale: 1.08, radius: 112, small: true })}\n`
 );
 writeFileSync(
 	`${out}/apple-touch-icon.png`,
-	png(icon({ scale: 0.78, ground: true }), 180)
+	png(icon({ scale: 0.96, radius: 0 }), 180)
 );
-writeFileSync(`${out}/icon-192.png`, png(icon({ scale: 0.78, ground: true }), 192));
-writeFileSync(`${out}/icon-512.png`, png(icon({ scale: 0.78, ground: true }), 512));
+writeFileSync(`${out}/icon-192.png`, png(icon({ scale: 0.96, radius: 0 }), 192));
+writeFileSync(`${out}/icon-512.png`, png(icon({ scale: 0.96, radius: 0 }), 512));
+// Android crops a maskable icon to a circle of 80% of its width: the drawing stays inside it.
 writeFileSync(
 	`${out}/icon-maskable-512.png`,
-	png(icon({ scale: 0.6, ground: true }), 512)
+	png(icon({ scale: 0.76, radius: 0 }), 512)
 );

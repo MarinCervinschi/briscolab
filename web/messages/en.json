@@ -100,8 +100,6 @@
 	"privacy_title": "What we collect",
 	"privacy_body": "The site uses Umami, on our own server, to count page views and finished games. Umami sets no cookies and stores no IP addresses or other data that identify a person.",
 	"privacy_event": "At the end of a game the site sends one event with the bot, the engine version, the level, who won, the point difference and whether you looked at the bot's cards. The moves are not sent.",
-	"credits_icon_title": "The icon",
-	"credits_icon_body": "Briscolab's icon is redrawn from",
 	"credits_code_title": "The code",
 	"credits_code_body": "The engine, the bots and the site are open source, under the MIT licence:",
 	"credits_cards_title": "The cards",

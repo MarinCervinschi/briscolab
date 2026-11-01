@@ -100,8 +100,6 @@
 	"privacy_title": "Cosa raccogliamo",
 	"privacy_body": "Il sito usa Umami, sul nostro server, per contare le visite alle pagine e le partite finite. Umami non usa cookie e non salva indirizzi IP né altri dati che identificano una persona.",
 	"privacy_event": "A fine partita il sito invia un solo evento con il bot, la versione del motore, il livello, chi ha vinto, lo scarto di punti e se hai guardato le carte del bot. Le mosse non vengono inviate.",
-	"credits_icon_title": "L'icona",
-	"credits_icon_body": "L'icona di Briscolab è ridisegnata a partire da",
 	"credits_code_title": "Il codice",
 	"credits_code_body": "Il motore, i bot e il sito sono open source, con licenza MIT:",
 	"credits_cards_title": "Le carte",
