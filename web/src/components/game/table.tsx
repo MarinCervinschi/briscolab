@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useRef } from "react";
 
 import { motion } from "motion/react";
 
-import type { Card, View } from "@/engine/types";
+import type { Card, Trick, View } from "@/engine/types";
 import { cardName } from "@/lib/cards";
 import { cn } from "@/lib/cn";
 import { BOT, type GameState, TRICK_MS } from "@/lib/game/runner";
@@ -59,14 +59,17 @@ export function Felt({
 	);
 }
 
+/** The top seat's hand: backs, or its `cards` face up when they are shown. */
 export function BotHand({
 	view,
 	label,
 	stage,
+	cards,
 }: {
 	view: View;
 	label: string;
 	stage: Stage;
+	cards?: Card[];
 }) {
 	const places = usePlaces();
 	const row = useRef<HTMLDivElement>(null);
@@ -82,6 +85,7 @@ export function BotHand({
 				Array.from({ length: view.handLens[BOT] }, (_, i) => (
 					<span key={i} className="block">
 						<MovingCard
+							card={cards?.[i]}
 							label={label}
 							from={() => places.deck}
 							delay={stage === "deal" ? dealDelay(BOT, i) : drawDelay(view, BOT)}
@@ -238,13 +242,26 @@ function Riffle() {
 	);
 }
 
-/** The cards in play: the trick in progress, or the one just won, which goes to the winner's pile. */
-export function TableCards({ view, state }: { view: View; state: GameState }) {
+/**
+ * The cards in play: the trick in progress, or the one just won, which goes to the winner's pile. A card from a
+ * hidden hand turns over on its way; `turnSeats` are those hands.
+ */
+export function TableCards({
+	view,
+	lastTrick,
+	turnSeats = [BOT],
+	trickMs = TRICK_MS,
+}: {
+	view: View;
+	lastTrick: Trick | null;
+	turnSeats?: number[];
+	trickMs?: number;
+}) {
 	const places = usePlaces();
 	const area = useRef<HTMLDivElement>(null);
-	const cards = state.lastTrick ? state.lastTrick.cards : view.table;
-	const leader = state.lastTrick ? state.lastTrick.leader : view.leader;
-	const winner = state.lastTrick?.winner;
+	const cards = lastTrick ? lastTrick.cards : view.table;
+	const leader = lastTrick ? lastTrick.leader : view.leader;
+	const winner = lastTrick?.winner;
 	useEffect(() => {
 		if (winner === undefined) return;
 		const timer = setTimeout(
@@ -253,10 +270,10 @@ export function TableCards({ view, state }: { view: View; state: GameState }) {
 					[])
 					sendToPile(el, places.piles[winner], winner === BOT);
 			},
-			TRICK_MS - TRAVEL_S * 1000 - 50
+			Math.max(0, trickMs - TRAVEL_S * 1000 - 50)
 		);
 		return () => clearTimeout(timer);
-	}, [winner, places]);
+	}, [winner, places, trickMs]);
 	return (
 		<div
 			ref={area}
@@ -268,7 +285,7 @@ export function TableCards({ view, state }: { view: View; state: GameState }) {
 					<MovingCard
 						key={card.index}
 						card={card}
-						turn={seat === BOT}
+						turn={turnSeats.includes(seat)}
 						from={() =>
 							seat === BOT ? places.botHand.at(-1) : places.hand.get(card.index)
 						}
@@ -290,8 +307,14 @@ export function TableCards({ view, state }: { view: View; state: GameState }) {
 	);
 }
 
-/** Each player's pile of won tricks, face down, with the count. */
-export function Piles({ view }: { view: View }) {
+/** Each player's pile of won tricks, face down, with the count. `names` are seat 0's and seat 1's. */
+export function Piles({
+	view,
+	names = [m.game_you(), m.game_bot()],
+}: {
+	view: View;
+	names?: [string, string];
+}) {
 	const places = usePlaces();
 	return (
 		<div className="hidden shrink-0 flex-col justify-between self-stretch py-2 lg:flex">
@@ -323,7 +346,7 @@ export function Piles({ view }: { view: View }) {
 							)}
 						</span>
 						<span className="text-[15px] leading-tight">
-							{seat === BOT ? m.game_bot() : m.game_you()}
+							{names[seat]}
 							<br />
 							<span className="text-text-soft text-sm">
 								{count === 1 ? m.game_taken_one() : m.game_taken_many({ count })}
@@ -336,16 +359,19 @@ export function Piles({ view }: { view: View }) {
 	);
 }
 
+/** The bottom seat's hand: the player's cards to play, or a bot's, face down unless shown, when there is no `onPlay`. */
 export function Hand({
 	view,
 	stage,
 	canPlay,
 	onPlay,
+	faceDown = false,
 }: {
 	view: View;
 	stage: Stage;
 	canPlay: boolean;
-	onPlay: (card: Card) => void;
+	onPlay?: (card: Card) => void;
+	faceDown?: boolean;
 }) {
 	const places = usePlaces();
 	const buttons = useRef(new Map<number, HTMLElement>());
@@ -371,14 +397,20 @@ export function Hand({
 								if (el) buttons.current.set(card.index, el);
 								else buttons.current.delete(card.index);
 							}}
-							disabled={!canPlay}
-							onClick={() => onPlay(card)}
-							aria-label={m.game_play_card({ card: cardName(card) })}
+							disabled={!canPlay || !onPlay}
+							onClick={() => onPlay?.(card)}
+							// A bot's hidden hand must not read its cards out.
+							aria-hidden={!onPlay}
+							tabIndex={onPlay ? undefined : -1}
+							aria-label={
+								onPlay ? m.game_play_card({ card: cardName(card) }) : undefined
+							}
 							className="group relative rounded-[12px] transition-[translate,scale] duration-200 ease-out enabled:hover:-translate-y-4 enabled:hover:scale-[1.03] enabled:focus-visible:-translate-y-4 enabled:active:scale-[0.97] disabled:cursor-default"
 						>
 							<MovingCard
 								card={card}
-								turn
+								turn={!faceDown}
+								faceDown={faceDown}
 								from={() => places.deck}
 								delay={stage === "deal" ? dealDelay(0, i) : drawDelay(view, 0)}
 								className="h-(--hand-h) w-[calc(var(--hand-h)*0.61)]"
@@ -391,7 +423,8 @@ export function Hand({
 						</button>
 						<kbd
 							className={cn(
-								"hidden font-mono text-sm transition-colors lg:block",
+								"hidden font-mono text-sm transition-colors",
+								onPlay && "lg:block",
 								canPlay ? "text-text-soft" : "text-text-faint"
 							)}
 						>

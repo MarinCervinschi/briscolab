@@ -14,18 +14,23 @@ import { CardFace } from "./card";
 import { reducedMotion } from "./moving-card";
 import { ReasoningView } from "./reasoning-view";
 
-/** The end of a game: the outcome, the score, three ways on, and every trick with the bot's reasoning behind its card. */
+/**
+ * The end of a game: the outcome, the score, three ways on, and every trick with the reasoning behind the bots'
+ * cards. With `names` the game was two bots, seat 0 and seat 1, and nobody is "you".
+ */
 export function Result({
 	view,
 	moves,
 	seed,
+	names,
 	onAgain,
 	onNew,
 	onHome,
 }: {
 	view: View;
-	moves: BotMove[];
+	moves: (BotMove & { seat?: number })[];
 	seed: number;
+	names?: [string, string];
 	onAgain: () => void;
 	onNew: () => void;
 	onHome: () => void;
@@ -33,14 +38,25 @@ export function Result({
 	const [you, bot] = [view.points[0], view.points[BOT]];
 	const [replayOpen, setReplayOpen] = useState(false);
 	const winner = view.outcome?.winner ?? null;
-	const title =
-		winner === 0 ? m.result_win() : winner === BOT ? m.result_loss() : m.result_draw();
-	const margin =
-		winner === 0
-			? m.result_margin_win({ points: you - bot })
+	const seatName = (seat: number) =>
+		names ? names[seat] : seat === BOT ? m.game_bot() : m.game_you();
+	const title = names
+		? winner === null
+			? m.result_draw()
+			: m.result_watch_win({ bot: names[winner] })
+		: winner === 0
+			? m.result_win()
 			: winner === BOT
-				? m.result_margin_loss({ points: 61 - you })
-				: m.result_margin_draw();
+				? m.result_loss()
+				: m.result_draw();
+	const margin =
+		winner === null
+			? m.result_margin_draw()
+			: names
+				? m.result_watch_margin({ points: Math.abs(you - bot) })
+				: winner === 0
+					? m.result_margin_win({ points: you - bot })
+					: m.result_margin_loss({ points: 61 - you });
 	const tricks = (seat: number) => view.tricks.filter(t => t.winner === seat).length;
 	return (
 		<div className="bg-ground/80 fixed inset-0 z-40 overflow-y-auto backdrop-blur-sm">
@@ -78,11 +94,18 @@ export function Result({
 						{winner !== null && <Trophy view={view} winner={winner} />}
 					</div>
 
-					<Score you={you} bot={bot} />
+					<Score you={you} bot={bot} names={[seatName(0), seatName(BOT)]} />
 
 					<p className="text-text-soft text-sm">
-						{m.result_tricks({ you: tricks(0), bot: tricks(BOT) })} ·{" "}
-						{m.result_seed({ seed })}
+						{names
+							? m.result_watch_tricks({
+									first: names[0],
+									firstCount: tricks(0),
+									second: names[1],
+									secondCount: tricks(BOT),
+								})
+							: m.result_tricks({ you: tricks(0), bot: tricks(BOT) })}{" "}
+						· {m.result_seed({ seed })}
 					</p>
 
 					<div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -140,7 +163,7 @@ export function Result({
 						</h3>
 						<ol id="replay" hidden={!replayOpen} className="flex flex-col gap-2">
 							{view.tricks.map((trick, i) => {
-								const move = moves.find(mv => mv.trick === i);
+								const played = moves.filter(mv => mv.trick === i);
 								return (
 									<li
 										key={i}
@@ -162,13 +185,13 @@ export function Result({
 												/>
 											))}
 											<span className="ml-auto text-right text-sm">
-												{trick.winner === BOT ? m.game_bot() : m.game_you()} ·{" "}
-												{trick.points}
+												{seatName(trick.winner)} · {trick.points}
 											</span>
 										</div>
-										{move && (
-											<details className="group">
+										{played.map(move => (
+											<details key={move.card.index} className="group">
 												<summary className="text-text-soft cursor-pointer text-sm">
+													{names && move.seat !== undefined && `${names[move.seat]} · `}
 													{cardName(move.card)} · {summary(move.reasoning)}
 												</summary>
 												<div className="pt-4">
@@ -176,10 +199,15 @@ export function Result({
 														reasoning={move.reasoning}
 														revealed
 														onReveal={() => {}}
+														opponent={
+															names && move.seat !== undefined
+																? names[1 - move.seat]
+																: undefined
+														}
 													/>
 												</div>
 											</details>
-										)}
+										))}
 									</li>
 								);
 							})}
@@ -192,7 +220,15 @@ export function Result({
 }
 
 /** The final score counting up, over the 120-point track with its 61-point notch. */
-function Score({ you, bot }: { you: number; bot: number }) {
+function Score({
+	you,
+	bot,
+	names,
+}: {
+	you: number;
+	bot: number;
+	names: [string, string];
+}) {
 	const [shown, setShown] = useState(reducedMotion() ? 1 : 0);
 	useEffect(() => {
 		if (reducedMotion()) return;
@@ -208,13 +244,13 @@ function Score({ you, bot }: { you: number; bot: number }) {
 		<div className="flex flex-col gap-3">
 			<div className="flex items-end justify-between font-mono">
 				<span className="flex flex-col">
-					<span className="text-text-soft font-sans text-sm">{m.game_you()}</span>
+					<span className="text-text-soft font-sans text-sm">{names[0]}</span>
 					<span className="text-5xl tabular-nums sm:text-6xl">
 						{Math.round(you * shown)}
 					</span>
 				</span>
 				<span className="flex flex-col items-end">
-					<span className="text-text-soft font-sans text-sm">{m.game_bot()}</span>
+					<span className="text-text-soft font-sans text-sm">{names[1]}</span>
 					<span className="text-data text-5xl tabular-nums sm:text-6xl">
 						{Math.round(bot * shown)}
 					</span>

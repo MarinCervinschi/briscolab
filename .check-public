@@ -6,3 +6,5 @@ warn em dash
 ignore web/pnpm-lock.yaml
 # The site's own address, public on purpose.
 allow-name cervinschi\.site
+# The bots' robots: generated artwork, whose coordinates read like addresses.
+ignore web/public/bots/*.svg

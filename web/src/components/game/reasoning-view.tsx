@@ -14,10 +14,13 @@ export function ReasoningView({
 	reasoning,
 	revealed,
 	onReveal,
+	opponent,
 }: {
 	reasoning: Reasoning | null;
 	revealed: boolean;
 	onReveal: () => void;
+	/** Whose cards the bot imagines, when it is not the person watching: another bot. */
+	opponent?: string;
 }) {
 	if (!reasoning) return <p className="text-text-soft">{m.reasoning_none()}</p>;
 	if (reasoning.kind === "random")
@@ -63,7 +66,11 @@ export function ReasoningView({
 
 			{reasoning.kind === "search" && reasoning.hypotheses.length > 0 && (
 				<section className="flex flex-col gap-2">
-					<h3 className="text-[15px] font-semibold">{m.reasoning_hypotheses()}</h3>
+					<h3 className="text-[15px] font-semibold">
+						{opponent
+							? m.reasoning_hypotheses_of({ name: opponent })
+							: m.reasoning_hypotheses()}
+					</h3>
 					<ul className="flex flex-col gap-1">
 						{reasoning.hypotheses.slice(0, 3).map((h, i) => (
 							<li

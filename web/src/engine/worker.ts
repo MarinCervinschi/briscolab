@@ -13,7 +13,8 @@ const ready = init({ module_or_path: wasmUrl });
 let session: Session | undefined;
 
 const send = (message: Response) => self.postMessage(message);
-const view = () => JSON.parse(session!.view(0)) as View;
+const views = () =>
+	[0, 1].map(seat => JSON.parse(session!.view(seat)) as View) as [View, View];
 const reasoning = () => JSON.parse(session!.reasoning()) as Reasoning;
 
 function think() {
@@ -29,15 +30,17 @@ function think() {
 		}
 	}
 	const stoppedEarly = !session!.done();
+	const seat = views()[0].toPlay!;
 	const final = reasoning();
 	const card = session!.playThought();
 	send({
 		type: "move",
+		seat,
 		card,
 		reasoning: final,
 		elapsedMs: performance.now() - start,
 		stoppedEarly,
-		view: view(),
+		views: views(),
 	});
 }
 
@@ -49,12 +52,14 @@ self.onmessage = async (event: MessageEvent<Request>) => {
 			case "new":
 				session?.free();
 				session = new Session(request.seed);
-				session.seatBot(1, request.bot, request.botSeed);
-				send({ type: "view", view: view() });
+				request.bots.forEach((bot, seat) => {
+					if (bot) session!.seatBot(seat, bot, request.botSeeds[seat]);
+				});
+				send({ type: "view", views: views() });
 				break;
 			case "play":
 				session!.play(request.card);
-				send({ type: "view", view: view() });
+				send({ type: "view", views: views() });
 				break;
 			case "think":
 				think();

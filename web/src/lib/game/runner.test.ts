@@ -54,11 +54,12 @@ function fakeEngine(): Engine {
 		think: async () =>
 			({
 				type: "move",
+				seat: 1,
 				card: 5,
 				reasoning,
 				elapsedMs: 3,
 				stoppedEarly: false,
-				view: afterBot,
+				views: [afterBot, afterBot],
 			}) as Move,
 		terminate: () => {},
 	} as unknown as Engine;

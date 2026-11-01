@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as PlayRouteImport } from './routes/play'
+import { Route as WatchRouteImport } from './routes/watch'
 import { Route as ApiSearchRouteImport } from './routes/api/search'
 import { Route as LabSplatRouteImport } from './routes/lab/$'
 import { Route as LabRunsRunRouteImport } from './routes/lab/runs/$run'
@@ -29,6 +30,11 @@ const CreditsRoute = CreditsRouteImport.update({
 const PlayRoute = PlayRouteImport.update({
   id: '/play',
   path: '/play',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WatchRoute = WatchRouteImport.update({
+  id: '/watch',
+  path: '/watch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSearchRoute = ApiSearchRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/credits': typeof CreditsRoute
   '/play': typeof PlayRoute
+  '/watch': typeof WatchRoute
   '/api/search': typeof ApiSearchRoute
   '/lab/$': typeof LabSplatRoute
   '/lab/runs/$run': typeof LabRunsRunRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/credits': typeof CreditsRoute
   '/play': typeof PlayRoute
+  '/watch': typeof WatchRoute
   '/api/search': typeof ApiSearchRoute
   '/lab/$': typeof LabSplatRoute
   '/lab/runs/$run': typeof LabRunsRunRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/credits': typeof CreditsRoute
   '/play': typeof PlayRoute
+  '/watch': typeof WatchRoute
   '/api/search': typeof ApiSearchRoute
   '/lab/$': typeof LabSplatRoute
   '/lab/runs/$run': typeof LabRunsRunRoute
@@ -75,14 +84,28 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/credits' | '/play' | '/api/search' | '/lab/$' | '/lab/runs/$run'
+    | '/'
+    | '/credits'
+    | '/play'
+    | '/watch'
+    | '/api/search'
+    | '/lab/$'
+    | '/lab/runs/$run'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/credits' | '/play' | '/api/search' | '/lab/$' | '/lab/runs/$run'
+  to:
+    | '/'
+    | '/credits'
+    | '/play'
+    | '/watch'
+    | '/api/search'
+    | '/lab/$'
+    | '/lab/runs/$run'
   id:
     | '__root__'
     | '/'
     | '/credits'
     | '/play'
+    | '/watch'
     | '/api/search'
     | '/lab/$'
     | '/lab/runs/$run'
@@ -92,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreditsRoute: typeof CreditsRoute
   PlayRoute: typeof PlayRoute
+  WatchRoute: typeof WatchRoute
   ApiSearchRoute: typeof ApiSearchRoute
   LabSplatRoute: typeof LabSplatRoute
   LabRunsRunRoute: typeof LabRunsRunRoute
@@ -118,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/play'
       fullPath: '/play'
       preLoaderRoute: typeof PlayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/watch': {
+      id: '/watch'
+      path: '/watch'
+      fullPath: '/watch'
+      preLoaderRoute: typeof WatchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/search': {
@@ -148,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreditsRoute: CreditsRoute,
   PlayRoute: PlayRoute,
+  WatchRoute: WatchRoute,
   ApiSearchRoute: ApiSearchRoute,
   LabSplatRoute: LabSplatRoute,
   LabRunsRunRoute: LabRunsRunRoute,

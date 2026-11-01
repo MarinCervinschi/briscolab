@@ -16,10 +16,13 @@ export function PointsBar({
 	bot,
 	you,
 	forecast,
+	names = [m.game_you(), m.game_bot()],
 }: {
 	bot: number;
 	you: number;
 	forecast: number | null;
+	/** Seat 0's and seat 1's, at the bottom and at the top. */
+	names?: [string, string];
 }) {
 	// Every position is measured from the bot's end, the top.
 	const at = (points: number) => `${(points / TOTAL) * 100}%`;
@@ -32,7 +35,7 @@ export function PointsBar({
 				aria-label={label}
 				className="relative hidden h-full w-14 flex-col gap-2 select-none lg:flex"
 			>
-				<span className="text-text-soft text-sm">{m.game_bot()}</span>
+				<span className="text-text-soft text-sm">{names[1]}</span>
 				<div className="relative mx-3.5 my-4 flex-1">
 					<div className="absolute inset-y-0 left-0 w-1 rounded-full bg-[#3a4852]">
 						<div
@@ -76,7 +79,7 @@ export function PointsBar({
 					)}
 				</div>
 				<span className="text-text-soft text-sm">
-					{m.game_you()} <span className="text-text font-mono">{you}</span>
+					{names[0]} <span className="text-text font-mono">{you}</span>
 				</span>
 			</div>
 		</>
@@ -98,10 +101,12 @@ export function Scoreboard({
 	bot,
 	you,
 	forecast,
+	names = [m.game_you(), m.game_bot()],
 }: {
 	bot: number;
 	you: number;
 	forecast: number | null;
+	names?: [string, string];
 }) {
 	const row = (name: string, points: number, colour: string, extra?: string) => (
 		<span className="flex items-baseline justify-between gap-3">
@@ -126,13 +131,13 @@ export function Scoreboard({
 			className="glass flex w-[104px] shrink-0 flex-col gap-0.5 rounded-2xl px-3 py-2 select-none"
 		>
 			{row(
-				m.game_bot(),
+				names[1],
 				bot,
 				"text-data",
 				forecast === null ? undefined : `≈${Math.round(forecast)}`
 			)}
 			<span className="h-px bg-white/10" />
-			{row(m.game_you(), you, "text-text")}
+			{row(names[0], you, "text-text")}
 		</div>
 	);
 }

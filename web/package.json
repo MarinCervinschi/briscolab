@@ -14,6 +14,7 @@
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"icons": "node scripts/make-icons.mjs",
+		"bots": "node scripts/make-bots.mjs",
 		"i18n": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide",
 		"wasm": "cargo build --manifest-path ../engine/Cargo.toml -p briscolab-wasm --release --target wasm32-unknown-unknown && wasm-bindgen --target web --out-dir src/engine/pkg ../engine/target/wasm32-unknown-unknown/release/briscolab_wasm.wasm"
 	},
@@ -39,6 +40,8 @@
 		"tailwindcss": "^4.3.3"
 	},
 	"devDependencies": {
+		"@dicebear/bottts": "9.4.2",
+		"@dicebear/core": "9.4.2",
 		"@inlang/paraglide-js": "2.29.0",
 		"@resvg/resvg-js": "2.6.2",
 		"@trivago/prettier-plugin-sort-imports": "^6.0.2",

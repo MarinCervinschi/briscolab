@@ -25,6 +25,21 @@ function Credits() {
 			</section>
 
 			<section className="flex flex-col gap-3">
+				<h2 className="text-2xl font-semibold">{m.credits_bots_title()}</h2>
+				<p className="leading-relaxed">
+					{m.credits_bots_body()}{" "}
+					<a href="https://bottts.com/" className="underline underline-offset-4">
+						Bottts
+					</a>
+					, Pablo Stanley ·{" "}
+					<a href="https://www.dicebear.com/" className="underline underline-offset-4">
+						DiceBear
+					</a>
+					.
+				</p>
+			</section>
+
+			<section className="flex flex-col gap-3">
 				<h2 className="text-2xl font-semibold">{m.credits_code_title()}</h2>
 				<p className="leading-relaxed">
 					{m.credits_code_body()}{" "}

@@ -118,7 +118,10 @@ export class GameRunner {
 				new Promise<void>(r => (this.skipWait = r)),
 			]);
 		this.skipWait = null;
-		const seen = [...move.view.table, ...move.view.tricks.flatMap(t => t.cards)];
+		const seen = [
+			...move.views[0].table,
+			...move.views[0].tricks.flatMap(t => t.cards),
+		];
 		const card = seen.find(c => c.index === move.card)!;
 		this.set({
 			reasoning: move.reasoning,
@@ -127,7 +130,7 @@ export class GameRunner {
 				{ trick: before.tricks.length, card, reasoning: move.reasoning },
 			],
 		});
-		await this.after(before, move.view);
+		await this.after(before, move.views[0]);
 	}
 
 	private async guard(work: () => Promise<void>) {

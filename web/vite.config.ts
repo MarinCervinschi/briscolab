@@ -40,6 +40,8 @@ export default defineConfig({
 				{ path: "/en" },
 				{ path: "/play" },
 				{ path: "/en/play" },
+				{ path: "/watch" },
+				{ path: "/en/watch" },
 				{ path: "/credits" },
 				{ path: "/en/credits" },
 				{ path: "/lab" },

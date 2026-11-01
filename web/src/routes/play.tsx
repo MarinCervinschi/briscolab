@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
+import { BotAvatar } from "@/components/bot-avatar";
 import { AbandonDialog } from "@/components/game/abandon-dialog";
 import { PlacesContext, newPlaces, reducedMotion } from "@/components/game/moving-card";
 import { PointsBar, Scoreboard } from "@/components/game/points-bar";
@@ -171,8 +172,11 @@ function Game({
 					<span className="hidden text-xl font-bold tracking-tight lg:block">
 						Briscolab
 					</span>
-					<div className="flex flex-col leading-tight lg:ml-auto lg:flex-row lg:items-baseline lg:gap-2">
-						<span className="font-semibold">{level.name()}</span>
+					<div className="flex flex-col leading-tight lg:ml-auto lg:flex-row lg:items-center lg:gap-2">
+						<span className="flex items-center gap-2 font-semibold">
+							<BotAvatar bot={level.engine} className="size-7" />
+							{level.name()}
+						</span>
 						<span className="text-text-soft text-sm">
 							{m.game_trick({ n: trickNo })}
 						</span>
@@ -217,7 +221,7 @@ function Game({
 								/>
 								<div className="flex flex-1 items-center gap-3 lg:gap-6">
 									<Deck view={view} stage={stage} />
-									<TableCards view={view} state={state} />
+									<TableCards view={view} lastTrick={state.lastTrick} />
 									<Piles view={view} />
 								</div>
 							</Felt>

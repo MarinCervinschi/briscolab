@@ -56,6 +56,7 @@ export function MovingCard({
 	label,
 	className,
 	faceClassName,
+	faceDown = false,
 }: {
 	card?: Card;
 	from: () => DOMRect | null | undefined;
@@ -65,6 +66,8 @@ export function MovingCard({
 	className?: string;
 	/** For what must turn with the card, such as its frame and shadow. */
 	faceClassName?: string;
+	/** Shows the back of a known card: a bot's hand while its cards are hidden. */
+	faceDown?: boolean;
 }) {
 	const outer = useRef<HTMLSpanElement>(null);
 	const inner = useRef<HTMLSpanElement>(null);
@@ -97,7 +100,7 @@ export function MovingCard({
 				ref={inner}
 				className="relative block h-full w-full [transform-style:preserve-3d]"
 			>
-				{card ? (
+				{card && !faceDown ? (
 					<CardFace
 						card={card}
 						className={cn("h-full w-full [backface-visibility:hidden]", faceClassName)}
@@ -105,7 +108,7 @@ export function MovingCard({
 				) : (
 					<CardBack label={label} className={cn("h-full w-full", faceClassName)} />
 				)}
-				{card && turn && (
+				{card && !faceDown && turn && (
 					<CardBack
 						className={cn(
 							"h-full w-full [transform:rotateY(180deg)] [backface-visibility:hidden]",
