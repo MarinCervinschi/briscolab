@@ -4,7 +4,7 @@ import { generateSW } from "workbox-build";
 
 const { count, size, warnings } = await generateSW({
 	globDirectory: "dist/client",
-	globPatterns: ["**/*.{js,css,html,svg,png,jpg,wasm,woff2,webmanifest}"],
+	globPatterns: ["**/*.{js,css,html,svg,png,jpg,wasm,woff2,webmanifest,wav}"],
 	swDest: "dist/client/sw.js",
 	// Page URLs end in a slash; the precache holds their index.html.
 	directoryIndex: "index.html",

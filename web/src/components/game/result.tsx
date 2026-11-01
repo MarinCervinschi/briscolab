@@ -62,6 +62,7 @@ export function Result({
 		<div className="bg-ground/80 fixed inset-0 z-40 overflow-y-auto backdrop-blur-sm">
 			<motion.section
 				role="dialog"
+				aria-modal="true"
 				aria-labelledby="result-title"
 				initial={{ opacity: 0, y: 28, scale: 0.98 }}
 				animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -111,6 +112,7 @@ export function Result({
 					<div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
 						<button
 							type="button"
+							autoFocus
 							onClick={onNew}
 							className="bg-text text-ground h-12 rounded-full px-6 font-semibold transition-transform active:scale-95"
 						>

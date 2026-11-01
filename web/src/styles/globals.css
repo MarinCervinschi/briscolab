@@ -113,6 +113,13 @@
 	--table-h: 150px;
 	--back-h: 104px;
 	--deck-h: 96px;
+	/* Three hand cards and their gaps fit in 288 px. */
+	@media (width < 360px) {
+		--hand-h: 148px;
+		--table-h: 128px;
+		--back-h: 80px;
+		--deck-h: 80px;
+	}
 	@media (width >= 64rem) {
 		--hand-h: clamp(128px, calc((100dvh - 240px) / 3), 220px);
 		--table-h: var(--hand-h);

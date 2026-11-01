@@ -110,8 +110,10 @@ favicon, seen at 16 to 32 px, keeps two cards with thicker outlines and no branc
 
 ### Phone (portrait)
 
-1. A top row: the round glass back button, the level and the trick ("Esperto", "Presa 9 di 20"), and the glass
-   "Ragionamento" pill that opens the reasoning sheet.
+1. A top row: the round glass back button, the level and the trick ("Esperto", "Presa 9 di 20"), the round glass
+   sound switch, and the glass "Ragionamento" pill that opens the reasoning sheet. Watching two bots, the sound
+   switch gives way to a settings button: its sheet holds sound, the speed and "Mostra le carte", and the controls
+   row keeps only "Pausa" and "Una carta".
 2. The table, from the top: the bot's three backs with the scoreboard in the corner, one line of status ("Il bot
    pensa: 640 ipotesi su 1000"), the deck with the briscola and the cards left, the cards on the table.
 3. The player's hand at the bottom, at the thumb, over the table's lower edge.
@@ -158,17 +160,29 @@ sections stay visible.
 - Sober and precise: cards slide and turn on short springs, the bars and the cursor grow smoothly. Nothing moves
   for decoration.
 - The game opens with the bot shuffling and dealing; played cards travel from the hand to the table, a won trick
-  goes to the winner's pile, and drawn cards come off the deck turning over. They run on phones too; the settings
-  will turn them off.
+  goes to the winner's pile, and drawn cards come off the deck turning over. They run on phones too, always.
 - The bot thinks for at least about 1.2 s; a tap or a key skips it (decision 12 in `SPEC.md`).
 - Under `prefers-reduced-motion` only fades remain.
+
+## Sound
+
+- Kenney's Casino Audio (CC0), converted to mono WAV at 22 kHz so every browser plays it: the shuffle at the
+  opening, a slide for each card dealt or drawn, a card laid for each card played, a shove when a trick goes to its
+  pile, a fan of cards at the end. Each has a few variants, picked at random.
+- On by default, with a switch in the settings and a speaker button during a game; the browser lets it start only after the first tap on the page.
+- No haptics: the web gives them on Android only.
 
 ## Screens
 
 As in `SPEC.md`, plus a settings screen:
 
-- **Impostazioni**: the card back (drawing and style), the theme (system, light, dark), animations on or off, fast
-  thinking (skip the minimum thinking time).
+- **Home and the other site pages**: the desktop top bar ("Gioca / Lab", the settings, the language). On a phone it
+  folds into a glass menu button whose panel lists Gioca, Lab, Impostazioni, Crediti e privacy and the language.
+- **Lab**: Fumadocs' own frame; its title carries a back arrow, and the sidebar opens with "Torna al gioco".
+
+- **Impostazioni** (`/settings`): the card back (drawing and style), the theme (system, light, dark) and sound, kept
+  in the browser. Dropped on 2026-11-01: fast thinking (the bots never felt slow) and the animations switch (always on,
+  except under `prefers-reduced-motion`).
 
 ## Checks
 

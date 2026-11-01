@@ -120,6 +120,8 @@ export function Scoreboard({
 					)}
 				>
 					{points}
+					{/* Reaching 61 is also a mark, not only the colour. */}
+					{points >= WIN && <span aria-hidden="true">✓</span>}
 				</span>
 			</span>
 		</span>
@@ -128,7 +130,7 @@ export function Scoreboard({
 		<div
 			role="img"
 			aria-label={scoreLabel(bot, you, forecast)}
-			className="glass flex w-[104px] shrink-0 flex-col gap-0.5 rounded-2xl px-3 py-2 select-none"
+			className="glass flex w-[104px] shrink-0 flex-col gap-0.5 rounded-2xl px-3 py-2 select-none max-[359px]:w-[92px] max-[359px]:px-2.5"
 		>
 			{row(
 				names[1],

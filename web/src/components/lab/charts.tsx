@@ -85,7 +85,7 @@ export function Ratings({ run: name }: { run: string }) {
 									}}
 								/>
 							</span>
-							<span className="text-fd-muted-foreground w-12 text-right font-mono text-sm">
+							<span className="text-fd-muted-foreground w-12 text-right font-mono text-sm tabular-nums">
 								{Math.round(v)}
 							</span>
 						</div>
@@ -148,7 +148,7 @@ export function VersusChampion({ run: name }: { run: string }) {
 									style={{ left: at(s.mean) }}
 								/>
 							</span>
-							<span className="text-fd-muted-foreground text-right font-mono text-sm whitespace-nowrap">
+							<span className="text-fd-muted-foreground text-right font-mono text-sm whitespace-nowrap tabular-nums">
 								{pct(s.mean)} ± {plusMinus(s)}
 							</span>
 						</div>
@@ -216,7 +216,7 @@ export function PairMatrix({ run: name }: { run: string }) {
 										<td
 											key={col}
 											className={cn(
-												"rounded-md px-2 py-1.5 text-center font-mono",
+												"rounded-md px-2 py-1.5 text-center font-mono tabular-nums",
 												tie && "outline-signal outline -outline-offset-1",
 												!tie && s.mean > 0.5 && "bg-data/25",
 												!tie && s.mean < 0.5 && "bg-fd-muted text-fd-muted-foreground"

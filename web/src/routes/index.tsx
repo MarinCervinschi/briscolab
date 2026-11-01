@@ -3,30 +3,18 @@ import { useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { BotAvatar } from "@/components/bot-avatar";
-import { LanguageLink } from "@/components/language-link";
+import { SiteHeader } from "@/components/site-header";
 import { cn } from "@/lib/cn";
 import { LEVELS, WATCH_BOTS, type WatchBot } from "@/lib/levels";
 import { m } from "@/paraglide/messages";
-import { localizeHref } from "@/paraglide/runtime";
 
 export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
 	return (
-		<main className="mx-auto flex min-h-dvh max-w-5xl flex-col gap-12 px-4 py-6 sm:px-8">
-			<header className="flex items-center justify-between">
-				<span className="text-xl font-bold tracking-tight">Briscolab</span>
-				<nav className="flex items-center gap-2">
-					<a
-						href={localizeHref("/lab")}
-						className="hover:bg-surface flex h-11 items-center rounded-full px-4 text-sm font-medium transition-colors"
-					>
-						{m.home_lab()}
-					</a>
-					<LanguageLink />
-				</nav>
-			</header>
-			<section className="flex flex-col gap-5 pt-12">
+		<main className="mx-auto flex min-h-dvh max-w-5xl flex-col gap-10 px-4 py-6 sm:gap-12 sm:px-8">
+			<SiteHeader current="play" />
+			<section className="flex flex-col gap-5 pt-4 sm:pt-12">
 				<h1 className="text-6xl font-bold tracking-[-0.045em] sm:text-8xl">
 					{m.home_title()}
 				</h1>
@@ -50,7 +38,7 @@ function Home() {
 				))}
 			</ul>
 			<WatchPicker />
-			<footer className="text-text-soft mt-auto pt-8 text-sm">
+			<footer className="text-text-soft mt-auto text-sm sm:pt-8">
 				<Link
 					to="/credits"
 					className="hover:text-text underline-offset-4 hover:underline"
@@ -91,14 +79,17 @@ function WatchPicker() {
 						aria-checked={value === bot.engine}
 						onClick={() => onChange(bot.engine)}
 						className={cn(
-							"flex h-12 min-w-0 items-center gap-2 rounded-2xl px-1.5 font-medium transition-colors sm:gap-3 sm:px-2",
+							"flex h-12 min-w-0 items-center gap-1.5 rounded-2xl px-1 text-sm font-medium transition-colors min-[380px]:gap-2 min-[380px]:px-1.5 min-[380px]:text-base sm:gap-3 sm:px-2",
 							mirrored && "flex-row-reverse text-right",
 							value === bot.engine
-								? "bg-raised text-text outline-text outline-2 -outline-offset-2"
+								? "bg-raised text-text ring-text ring-2 ring-inset"
 								: "text-text-soft hover:bg-raised/60 hover:text-text"
 						)}
 					>
-						<BotAvatar bot={bot.engine} className="size-8 sm:size-9" />
+						<BotAvatar
+							bot={bot.engine}
+							className="size-7 min-[380px]:size-8 sm:size-9"
+						/>
 						<span className="truncate">{bot.name}</span>
 					</button>
 				))}

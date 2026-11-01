@@ -113,6 +113,12 @@ MLFLOW_TRACKING_URI=<tracking uri> uv run briscolab-arena --deals 10000 --mlflow
 - `/watch?bots=<a>,<b>&seed=…` is two bots playing each other (`src/lib/game/watch.ts`, `WatchRunner`): the
   worker seats a bot in each seat and sends both seats' views, and the runner plays card after card with pause, one
   card at a time and speed 1×, 2×, 4×. The bots are the four levels' (`WATCH_BOTS` in `src/lib/levels.ts`).
+- Settings (`src/lib/settings.ts`, the `/settings` page): the card back, the theme and sound, in `localStorage` behind
+  try/catch, so blocked storage only loses the choice. A script in the head sets `data-theme` before the first
+  paint. `CardBack` draws the chosen back. Sounds (`src/lib/sound.ts`, files in `public/sounds`) play through the
+  Web Audio API; a card's sound is the `sound` prop of `MovingCard`. `SiteHeader` is the top bar of the site pages
+  (a menu on phones); during a game `SoundToggle` switches sound, and on `/watch` on a phone a settings sheet holds
+  sound, speed and the shown hands.
 - Umami (`src/lib/analytics.ts`) counts page views and sends one `game_end` event per finished game. Its script's
   address and site id are build arguments (`VITE_UMAMI_SCRIPT_URL`, `VITE_UMAMI_WEBSITE_ID`) set by the deploy; without
   them nothing is sent. `/credits` holds the card credits and the privacy note.

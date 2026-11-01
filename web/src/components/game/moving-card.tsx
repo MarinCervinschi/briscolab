@@ -4,6 +4,7 @@ import { animate } from "motion";
 
 import type { Card } from "@/engine/types";
 import { cn } from "@/lib/cn";
+import { type Sound, playSound } from "@/lib/sound";
 
 import { CardBack, CardFace } from "./card";
 
@@ -57,6 +58,7 @@ export function MovingCard({
 	className,
 	faceClassName,
 	faceDown = false,
+	sound,
 }: {
 	card?: Card;
 	from: () => DOMRect | null | undefined;
@@ -68,12 +70,15 @@ export function MovingCard({
 	faceClassName?: string;
 	/** Shows the back of a known card: a bot's hand while its cards are hidden. */
 	faceDown?: boolean;
+	/** Heard when the card sets off, motion or not. */
+	sound?: Sound;
 }) {
 	const outer = useRef<HTMLSpanElement>(null);
 	const inner = useRef<HTMLSpanElement>(null);
 	const arrived = useRef(false);
 	useLayoutEffect(() => {
 		// Strict mode runs the effect twice in development; the second run would measure the card already moved.
+		if (sound && !arrived.current) playSound(sound, delay);
 		if (arrived.current || reducedMotion()) return;
 		arrived.current = true;
 		const rect = from();

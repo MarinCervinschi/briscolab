@@ -22,6 +22,7 @@ export function AbandonDialog({
 		>
 			<section
 				role="alertdialog"
+				aria-modal="true"
 				aria-labelledby="abandon-title"
 				aria-describedby="abandon-body"
 				onClick={e => e.stopPropagation()}

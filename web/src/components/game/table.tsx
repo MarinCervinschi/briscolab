@@ -6,6 +6,7 @@ import type { Card, Trick, View } from "@/engine/types";
 import { cardName } from "@/lib/cards";
 import { cn } from "@/lib/cn";
 import { BOT, type GameState, TRICK_MS } from "@/lib/game/runner";
+import { playSound } from "@/lib/sound";
 import { m } from "@/paraglide/messages";
 
 import { CardBack, CardFace } from "./card";
@@ -42,7 +43,7 @@ export function Felt({
 			className={cn(
 				"relative isolate rounded-[32px] border border-white/[0.07] lg:rounded-[40px]",
 				"bg-[radial-gradient(ellipse_at_50%_42%,color-mix(in_oklab,var(--color-data)_13%,var(--color-surface))_0%,var(--color-surface)_58%,color-mix(in_oklab,var(--color-ground)_60%,var(--color-surface))_100%)]",
-				"shadow-[inset_0_1px_0_rgb(255_255_255/0.06),inset_0_0_90px_rgb(0_0_0/0.45),0_30px_80px_-20px_rgb(0_0_0/0.6)]",
+				"shadow-[inset_0_1px_0_rgb(255_255_255/0.06),inset_0_0_90px_rgb(0_0_0/0.45)]",
 				className
 			)}
 		>
@@ -80,13 +81,17 @@ export function BotHand({
 		);
 	});
 	return (
-		<div ref={row} className="flex min-h-(--back-h) gap-2 lg:justify-center lg:gap-3">
+		<div
+			ref={row}
+			className="flex min-h-(--back-h) gap-2 max-[359px]:gap-1 lg:justify-center lg:gap-3"
+		>
 			{stage !== "shuffle" &&
 				Array.from({ length: view.handLens[BOT] }, (_, i) => (
 					<span key={i} className="block">
 						<MovingCard
 							card={cards?.[i]}
 							label={label}
+							sound="deal"
 							from={() => places.deck}
 							delay={stage === "deal" ? dealDelay(BOT, i) : drawDelay(view, BOT)}
 							className="h-(--back-h) w-[calc(var(--back-h)*0.61)]"
@@ -125,12 +130,16 @@ export function Status({
 				: m.game_you_take({ points: lastTrick.points });
 	if (stage === "shuffle") text = m.game_shuffling();
 	if (stage === "deal") text = m.game_dealing();
+	// Read out once per turn and trick, without the search's running count.
+	const spoken =
+		phase === "bot" && !lastTrick && stage === "play" ? m.game_bot_thinking() : text;
 	return (
-		<div
-			className="mt-3 flex h-9 items-center gap-3 lg:justify-center"
-			aria-live="polite"
-		>
+		<div className="mt-3 flex h-9 items-center gap-3 lg:justify-center">
+			<span className="sr-only" aria-live="polite">
+				{spoken}
+			</span>
 			<span
+				aria-hidden="true"
 				className={cn(
 					"text-[15px]",
 					phase === "player" && stage === "play" ? "text-text" : "text-text-soft"
@@ -266,6 +275,7 @@ export function TableCards({
 		if (winner === undefined) return;
 		const timer = setTimeout(
 			() => {
+				playSound("take");
 				for (const el of area.current?.querySelectorAll<HTMLElement>("[data-card]") ??
 					[])
 					sendToPile(el, places.piles[winner], winner === BOT);
@@ -286,6 +296,7 @@ export function TableCards({
 						key={card.index}
 						card={card}
 						turn={turnSeats.includes(seat)}
+						sound="play"
 						from={() =>
 							seat === BOT ? places.botHand.at(-1) : places.hand.get(card.index)
 						}
@@ -411,6 +422,7 @@ export function Hand({
 								card={card}
 								turn={!faceDown}
 								faceDown={faceDown}
+								sound="deal"
 								from={() => places.deck}
 								delay={stage === "deal" ? dealDelay(0, i) : drawDelay(view, 0)}
 								className="h-(--hand-h) w-[calc(var(--hand-h)*0.61)]"

@@ -73,4 +73,3 @@ The engine is the only place that knows the rules. The lab and the site never re
 
 ## Open questions
 
-- Sound and haptics: which events, and an off switch.

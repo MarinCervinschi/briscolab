@@ -18,12 +18,16 @@ import {
 	type Stage,
 	TableCards,
 } from "@/components/game/table";
+import { SoundToggle } from "@/components/sound-toggle";
+import { Switch } from "@/components/switch";
 import { cn } from "@/lib/cn";
 import { forecast } from "@/lib/game/reasoning";
 import { TRICK_MS } from "@/lib/game/runner";
 import { useWatch } from "@/lib/game/use-watch";
 import { SPEEDS, type WatchRunner, type WatchState } from "@/lib/game/watch";
 import { type WatchBot, botLabel, parseBots } from "@/lib/levels";
+import { updateSettings, useSettings } from "@/lib/settings";
+import { playSound } from "@/lib/sound";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/watch")({
@@ -81,13 +85,17 @@ function Game({
 		reducedMotion() ? "play" : "shuffle"
 	);
 	const [revealed, setRevealed] = useState(false);
-	const [sheetOpen, setSheetOpen] = useState(false);
+	const [sheet, setSheet] = useState<"reasoning" | "settings" | null>(null);
+	const settings = useSettings();
 	const [pinned, setPinned] = useState<number | null>(null);
 	const names: [string, string] = [botLabel(bots[0]), botLabel(bots[1])];
 	const views = state?.views;
 
 	// The opening runs once the engine has dealt: the shuffle, then the deal, then the bots play.
 	const ready = views !== undefined && views !== null;
+	useEffect(() => {
+		if (ready && stage === "shuffle") playSound("shuffle");
+	}, [ready, stage]);
 	useEffect(() => {
 		if (!ready || stage === "play") return;
 		const timer = setTimeout(
@@ -96,6 +104,10 @@ function Game({
 		);
 		return () => clearTimeout(timer);
 	}, [ready, stage]);
+	const over = state?.phase === "over";
+	useEffect(() => {
+		if (over) playSound("end");
+	}, [over]);
 	const started = useRef(false);
 	useEffect(() => {
 		if (ready && stage === "play" && runner && !started.current) {
@@ -106,8 +118,18 @@ function Game({
 
 	if (!state || !views || !runner) {
 		return (
-			<main className="text-text-soft grid min-h-dvh place-items-center px-4">
-				{state?.error ? m.game_error({ message: state.error }) : m.game_loading()}
+			<main className="text-text-soft flex min-h-dvh flex-col items-center justify-center gap-5 px-4 text-center">
+				<p role={state?.error ? "alert" : "status"}>
+					{state?.error ? m.game_error({ message: state.error }) : m.game_loading()}
+				</p>
+				{state?.error && (
+					<Link
+						to="/"
+						className="bg-text text-ground flex h-11 items-center rounded-full px-6 font-semibold"
+					>
+						{m.game_back()}
+					</Link>
+				)}
 			</main>
 		);
 	}
@@ -177,25 +199,64 @@ function Game({
 						Briscolab
 					</Link>
 					<div className="flex min-w-0 flex-col leading-tight lg:ml-auto lg:flex-row lg:items-center lg:gap-2">
-						<span className="flex min-w-0 items-center gap-2 font-semibold">
-							<span className="flex shrink-0 -space-x-2">
+						<h1 className="flex min-w-0 items-center gap-2 text-base font-semibold">
+							<span className="flex shrink-0 -space-x-2 max-[359px]:hidden">
 								<BotAvatar bot={bots[0]} className="size-7" />
 								<BotAvatar bot={bots[1]} className="size-7" />
 							</span>
-							<span className="truncate">
+							<span className="line-clamp-2 text-sm leading-tight sm:text-base">
 								{m.watch_title({ first: names[0], second: names[1] })}
 							</span>
-						</span>
+						</h1>
 						<span className="text-text-soft text-sm">
 							{m.game_trick({ n: trickNo })}
 						</span>
 					</div>
+					<SoundToggle className="ml-auto max-sm:hidden lg:ml-2" />
 					<button
 						type="button"
-						onClick={() => setSheetOpen(true)}
-						className="glass relative ml-auto h-11 shrink-0 rounded-full px-4 text-sm font-medium lg:ml-2 xl:hidden"
+						onClick={() => setSheet("settings")}
+						aria-label={m.home_settings()}
+						className="glass relative ml-auto grid size-11 shrink-0 place-items-center rounded-full sm:hidden"
 					>
-						{m.game_reasoning()}
+						<svg
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							aria-hidden="true"
+						>
+							<path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+							<circle cx="16" cy="7" r="2" />
+							<circle cx="10" cy="17" r="2" />
+						</svg>
+					</button>
+					<button
+						type="button"
+						onClick={() => setSheet("reasoning")}
+						aria-label={m.game_reasoning()}
+						className="glass relative grid h-11 shrink-0 place-items-center rounded-full px-3 text-sm font-medium sm:px-4 lg:ml-2 xl:hidden"
+					>
+						<svg
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							aria-hidden="true"
+							className="sm:hidden"
+						>
+							<circle cx="6" cy="6" r="2" />
+							<circle cx="18" cy="12" r="2" />
+							<circle cx="6" cy="18" r="2" />
+							<path d="M8 6.8 16 11M8 17.2 16 13" />
+						</svg>
+						<span className="hidden sm:inline">{m.game_reasoning()}</span>
 					</button>
 					<Link
 						to="/"
@@ -276,23 +337,29 @@ function Game({
 					</aside>
 				</main>
 
-				{sheetOpen && (
-					<div
-						className="fixed inset-0 z-30 xl:hidden"
-						onClick={() => setSheetOpen(false)}
-					>
+				{sheet && (
+					<div className="fixed inset-0 z-30 xl:hidden" onClick={() => setSheet(null)}>
 						<section
 							role="dialog"
-							aria-label={m.reasoning_title()}
+							aria-modal="true"
+							aria-label={
+								sheet === "settings" ? m.home_settings() : m.reasoning_title()
+							}
+							onKeyDown={e => e.key === "Escape" && setSheet(null)}
 							onClick={e => e.stopPropagation()}
 							className="glass absolute inset-x-2 bottom-2 flex max-h-[75dvh] flex-col gap-5 overflow-y-auto rounded-[32px] p-5 sm:right-2 sm:left-auto sm:w-[420px]"
 						>
 							<div className="flex items-center justify-between">
-								<h2 className="text-lg font-semibold">{m.reasoning_title()}</h2>
+								<h2 className="text-lg font-semibold">
+									{sheet === "settings" ? m.home_settings() : m.reasoning_title()}
+								</h2>
 								<button
 									type="button"
-									aria-label={m.game_close()}
-									onClick={() => setSheetOpen(false)}
+									aria-label={
+										sheet === "settings" ? m.settings_close() : m.game_close()
+									}
+									autoFocus
+									onClick={() => setSheet(null)}
 									className="bg-raised grid size-11 place-items-center rounded-full"
 								>
 									<svg
@@ -308,7 +375,36 @@ function Game({
 									</svg>
 								</button>
 							</div>
-							{reasoningPanel}
+							{sheet === "settings" ? (
+								<div className="flex flex-col gap-5">
+									<div className="flex items-center justify-between gap-4">
+										<span id="sheet-sound" className="font-medium">
+											{m.settings_sound()}
+										</span>
+										<Switch
+											checked={settings.sound}
+											onChange={sound => updateSettings({ sound })}
+											labelledBy="sheet-sound"
+										/>
+									</div>
+									<div className="flex items-center justify-between gap-4">
+										<span className="font-medium">{m.watch_speed()}</span>
+										<Speeds state={state} runner={runner} />
+									</div>
+									<div className="flex items-center justify-between gap-4">
+										<span id="sheet-reveal" className="font-medium">
+											{m.watch_reveal()}
+										</span>
+										<Switch
+											checked={revealed}
+											onChange={setRevealed}
+											labelledBy="sheet-reveal"
+										/>
+									</div>
+								</div>
+							) : (
+								reasoningPanel
+							)}
 						</section>
 					</div>
 				)}
@@ -329,7 +425,8 @@ function Game({
 	);
 }
 
-/** Pause and resume, one card at a time while paused, the speed, and whether the hands are shown. */
+/** Pause and resume, one card at a time while paused, the speed, and whether the hands are shown; on a phone the
+ * last two are in the settings sheet. */
 function Controls({
 	state,
 	runner,
@@ -360,35 +457,44 @@ function Controls({
 			>
 				{m.watch_step()}
 			</button>
-			<div
-				role="radiogroup"
-				aria-label={m.watch_speed()}
-				className="bg-raised flex h-10 rounded-full p-1"
-			>
-				{SPEEDS.map(speed => (
-					<button
-						key={speed}
-						type="button"
-						role="radio"
-						aria-checked={state.speed === speed}
-						onClick={() => runner.setSpeed(speed)}
-						className={cn(
-							"rounded-full px-3 font-mono text-sm transition-colors",
-							state.speed === speed ? "bg-surface text-text" : "text-text-soft"
-						)}
-					>
-						{speed}×
-					</button>
-				))}
-			</div>
-			<button
-				type="button"
-				onClick={onReveal}
-				aria-pressed={revealed}
-				className={button}
-			>
+			<Speeds state={state} runner={runner} className="max-sm:hidden" />
+			<button type="button" onClick={onReveal} className={cn(button, "max-sm:hidden")}>
 				{revealed ? m.watch_hide() : m.watch_reveal()}
 			</button>
+		</div>
+	);
+}
+
+function Speeds({
+	state,
+	runner,
+	className,
+}: {
+	state: WatchState;
+	runner: WatchRunner;
+	className?: string;
+}) {
+	return (
+		<div
+			role="radiogroup"
+			aria-label={m.watch_speed()}
+			className={cn("bg-raised flex h-11 rounded-full p-1", className)}
+		>
+			{SPEEDS.map(speed => (
+				<button
+					key={speed}
+					type="button"
+					role="radio"
+					aria-checked={state.speed === speed}
+					onClick={() => runner.setSpeed(speed)}
+					className={cn(
+						"min-w-11 rounded-full px-3 font-mono text-sm transition-colors",
+						state.speed === speed ? "bg-surface text-text" : "text-text-soft"
+					)}
+				>
+					{speed}×
+				</button>
+			))}
 		</div>
 	);
 }
@@ -420,8 +526,15 @@ function Status({
 	if (stage === "shuffle") text = m.watch_shuffling();
 	if (stage === "deal") text = m.watch_dealing();
 	return (
-		<div className="mt-3 flex h-9 items-center lg:justify-center" aria-live="polite">
-			<span className="text-text-soft text-[15px]">{text}</span>
+		<div className="mt-3 flex h-9 items-center lg:justify-center">
+			<span className="sr-only" aria-live="polite">
+				{thinking !== null && !lastTrick && stage === "play"
+					? m.watch_thinking({ bot: names[thinking] })
+					: text}
+			</span>
+			<span aria-hidden="true" className="text-text-soft text-[15px]">
+				{text}
+			</span>
 		</div>
 	);
 }

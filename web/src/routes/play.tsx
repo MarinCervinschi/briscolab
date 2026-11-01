@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { BotAvatar } from "@/components/bot-avatar";
 import { AbandonDialog } from "@/components/game/abandon-dialog";
@@ -20,11 +20,13 @@ import {
 	Status,
 	TableCards,
 } from "@/components/game/table";
+import { SoundToggle } from "@/components/sound-toggle";
 import { ENGINE_VERSION, trackGameEnd } from "@/lib/analytics";
 import { forecast } from "@/lib/game/reasoning";
 import { BOT, type GameState } from "@/lib/game/runner";
 import { useGame } from "@/lib/game/use-game";
 import { LEVELS, parseLevel } from "@/lib/levels";
+import { playSound } from "@/lib/sound";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/play")({
@@ -92,6 +94,9 @@ function Game({
 	// The opening runs once the engine has dealt: the shuffle, then the deal.
 	const ready = view !== undefined && view !== null;
 	useEffect(() => {
+		if (ready && stage === "shuffle") playSound("shuffle");
+	}, [ready, stage]);
+	useEffect(() => {
 		if (!ready || stage === "play") return;
 		const next = stage === "shuffle" ? "deal" : "play";
 		const timer = setTimeout(
@@ -104,18 +109,20 @@ function Game({
 	// Keys 1 to 3 play the cards in hand, on desktop.
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
+			if (e.metaKey || e.ctrlKey || e.altKey || leaving || sheetOpen) return;
 			const i = Number(e.key) - 1;
 			if (canPlay && view && runner && i >= 0 && i < view.hand.length)
 				void runner.play(view.hand[i]);
 		};
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
-	}, [canPlay, view, runner]);
+	}, [canPlay, view, runner, leaving, sheetOpen]);
 
 	// One event when the game ends (SPEC.md, decision 13); a game abandoned sends nothing.
 	const over = state?.phase === "over";
 	useEffect(() => {
 		if (!over || !view) return;
+		playSound("end");
 		const winner = view.outcome?.winner;
 		trackGameEnd({
 			bot: level.engine,
@@ -130,8 +137,18 @@ function Game({
 
 	if (!state || !view || !runner) {
 		return (
-			<main className="text-text-soft grid min-h-dvh place-items-center px-4">
-				{state?.error ? m.game_error({ message: state.error }) : m.game_loading()}
+			<main className="text-text-soft flex min-h-dvh flex-col items-center justify-center gap-5 px-4 text-center">
+				<p role={state?.error ? "alert" : "status"}>
+					{state?.error ? m.game_error({ message: state.error }) : m.game_loading()}
+				</p>
+				{state?.error && (
+					<Link
+						to="/"
+						className="bg-text text-ground flex h-11 items-center rounded-full px-6 font-semibold"
+					>
+						{m.game_back()}
+					</Link>
+				)}
 			</main>
 		);
 	}
@@ -172,21 +189,39 @@ function Game({
 					<span className="hidden text-xl font-bold tracking-tight lg:block">
 						Briscolab
 					</span>
-					<div className="flex flex-col leading-tight lg:ml-auto lg:flex-row lg:items-center lg:gap-2">
-						<span className="flex items-center gap-2 font-semibold">
+					<div className="flex min-w-0 flex-col leading-tight lg:ml-auto lg:flex-row lg:items-center lg:gap-2">
+						<h1 className="flex items-center gap-2 text-base font-semibold">
 							<BotAvatar bot={level.engine} className="size-7" />
 							{level.name()}
-						</span>
+						</h1>
 						<span className="text-text-soft text-sm">
 							{m.game_trick({ n: trickNo })}
 						</span>
 					</div>
+					<SoundToggle className="ml-auto lg:ml-2" />
 					<button
 						type="button"
 						onClick={() => setSheetOpen(true)}
-						className="glass relative ml-auto h-11 rounded-full px-4 text-sm font-medium lg:ml-2 xl:hidden"
+						aria-label={m.game_reasoning()}
+						className="glass relative grid h-11 shrink-0 place-items-center rounded-full px-3 text-sm font-medium sm:px-4 lg:ml-2 xl:hidden"
 					>
-						{m.game_reasoning()}
+						<svg
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							aria-hidden="true"
+							className="sm:hidden"
+						>
+							<circle cx="6" cy="6" r="2" />
+							<circle cx="18" cy="12" r="2" />
+							<circle cx="6" cy="18" r="2" />
+							<path d="M8 6.8 16 11M8 17.2 16 13" />
+						</svg>
+						<span className="hidden sm:inline">{m.game_reasoning()}</span>
 					</button>
 					<button
 						type="button"
@@ -255,7 +290,9 @@ function Game({
 					>
 						<section
 							role="dialog"
+							aria-modal="true"
 							aria-label={m.reasoning_title()}
+							onKeyDown={e => e.key === "Escape" && setSheetOpen(false)}
 							onClick={e => e.stopPropagation()}
 							className="glass absolute inset-x-2 bottom-2 flex max-h-[75dvh] flex-col gap-5 overflow-y-auto rounded-[32px] p-5 sm:right-2 sm:left-auto sm:w-[420px]"
 						>
@@ -264,6 +301,7 @@ function Game({
 								<button
 									type="button"
 									aria-label={m.game_close()}
+									autoFocus
 									onClick={() => setSheetOpen(false)}
 									className="bg-raised grid size-11 place-items-center rounded-full"
 								>

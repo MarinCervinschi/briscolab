@@ -6,6 +6,7 @@ import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { RootProvider } from "fumadocs-ui/provider/tanstack";
 
 import { labI18n } from "@/lib/lab/i18n";
+import { m } from "@/paraglide/messages";
 import { localizeHref } from "@/paraglide/runtime";
 
 import { LabSearch } from "./search";
@@ -64,11 +65,43 @@ export function LabLayout({
 		>
 			<DocsLayout
 				tree={tree}
-				nav={{ title: "Briscolab · Lab", url: lang === "it" ? "/" : "/en" }}
+				nav={{
+					title: (
+						<>
+							<BackArrow />
+							Briscolab · Lab
+						</>
+					),
+					url: lang === "it" ? "/" : "/en",
+				}}
+				links={[
+					{
+						text: m.lab_back(),
+						url: lang === "it" ? "/" : "/en",
+						icon: <BackArrow />,
+					},
+				]}
 				themeSwitch={{ enabled: false }}
 			>
 				{children}
 			</DocsLayout>
 		</RootProvider>
+	);
+}
+
+function BackArrow() {
+	return (
+		<svg
+			width="16"
+			height="16"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			aria-hidden="true"
+		>
+			<path d="M15 18l-6-6 6-6" />
+		</svg>
 	);
 }

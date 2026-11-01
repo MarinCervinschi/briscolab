@@ -40,12 +40,33 @@ function Credits() {
 			</section>
 
 			<section className="flex flex-col gap-3">
+				<h2 className="text-2xl font-semibold">{m.credits_sound_title()}</h2>
+				<p className="leading-relaxed">
+					{m.credits_sound_body()}{" "}
+					<a
+						href="https://kenney.nl/assets/casino-audio"
+						className="underline underline-offset-4"
+					>
+						Casino Audio, Kenney
+					</a>{" "}
+					(
+					<a
+						href="https://creativecommons.org/publicdomain/zero/1.0/"
+						className="underline underline-offset-4"
+					>
+						CC0
+					</a>
+					).
+				</p>
+			</section>
+
+			<section className="flex flex-col gap-3">
 				<h2 className="text-2xl font-semibold">{m.credits_code_title()}</h2>
 				<p className="leading-relaxed">
 					{m.credits_code_body()}{" "}
 					<a
 						href="https://github.com/MarinCervinschi/briscolab"
-						className="underline underline-offset-4"
+						className="break-all underline underline-offset-4"
 					>
 						github.com/MarinCervinschi/briscolab
 					</a>

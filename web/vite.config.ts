@@ -44,6 +44,8 @@ export default defineConfig({
 				{ path: "/en/watch" },
 				{ path: "/credits" },
 				{ path: "/en/credits" },
+				{ path: "/settings" },
+				{ path: "/en/settings" },
 				{ path: "/lab" },
 				{ path: "/en/lab" },
 				{ path: "/api/search" },

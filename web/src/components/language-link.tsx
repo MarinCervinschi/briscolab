@@ -12,7 +12,7 @@ export function LanguageLink() {
 		<a
 			href={localizeHref(pathname, { locale: other })}
 			hrefLang={other}
-			className="glass relative flex h-11 items-center gap-2.5 rounded-full px-4 text-sm font-medium"
+			className="glass relative flex h-11 shrink-0 items-center gap-2.5 rounded-full px-4 text-sm font-medium"
 		>
 			<Flag locale={other} />
 			{m.language_switch()}
