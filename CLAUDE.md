@@ -71,8 +71,8 @@ cargo build -p briscolab-core --target wasm32-unknown-unknown
 - `stats.py` (score per duplicate deal, 95% intervals, Bradley-Terry ratings), `arena.py` (`Config`, `run`, the
   report and the JSON results), `tracking.py` (one MLflow run per round robin, experiment `briscolab-arena`),
   `__main__.py` (the `briscolab-arena` command).
-- MLflow runs on savvy, set up in `cervinschi-infra`, at `http://100.89.8.106:5000`: tailnet only, so Tailscale
-  must be on. The client (`mlflow-skinny`) stays on the server's minor version, 3.17. Artifacts go through the
+- MLflow runs on the maintainer's server, on the tailnet only; its address is in the maintainer's private notes.
+  The client (`mlflow-skinny`) stays on the server's minor version, 3.17. Artifacts go through the
   server, so the lab needs only `MLFLOW_TRACKING_URI`, no keys. Logging is opt-in with `--mlflow`.
 - The unit of the arena is the duplicate deal: a bot's score is the mean of its two games (a draw counts half),
   and a pair is decisive when the score's interval excludes 50%. Every pair plays the same seeds.
@@ -85,7 +85,7 @@ uv run pytest
 uv run ruff check . && uv run ruff format --check .
 uv run pyright
 uv run briscolab-arena --deals 10000 --out results/<name>.json
-MLFLOW_TRACKING_URI=http://100.89.8.106:5000 uv run briscolab-arena --deals 10000 --mlflow --run-name <name>
+MLFLOW_TRACKING_URI=<tracking uri> uv run briscolab-arena --deals 10000 --mlflow --run-name <name>
 ```
 
 ## Web
@@ -135,9 +135,9 @@ pnpm build
 - Every game is reproducible from a seed.
 - A bot becomes the champion only through the arena (duplicate deals, 95% intervals), never by eye.
 - Repo, docs and code in English; the site's strings in Italian and English message files.
-- Every push runs `scripts/check-public.sh --pushed` from `.githooks/pre-push` (enable it once per clone:
-  `git config core.hooksPath .githooks`). It blocks secrets, addresses and private names in the lines the push
-  adds, and stops with exit code 2 unless `CLAUDE_KIT_DENYLIST` points at the private deny list. Its settings are
+- Every push runs `scripts/check-public.sh` from `.githooks/pre-push` (enable it once per clone:
+  `git config core.hooksPath .githooks`). It blocks secrets, addresses and private names in every file the push
+  carries, and stops with exit code 2 unless `CLAUDE_KIT_DENYLIST` points at the private deny list. Its settings are
   in `.check-public`; the script is a copy of the one in `claude-kit`, and changes go there first.
 
 ## How code is written

@@ -23,10 +23,5 @@ lab/mlruns/
 lab/runs/
 lab/checkpoints/
 
-# Terraform: providers and local state stay out; the lock file is committed.
-infra/**/.terraform/
-*.tfstate
-*.tfstate.*
-*.tfplan
 web/src/paraglide/
 web/src/engine/pkg/

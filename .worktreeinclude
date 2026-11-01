@@ -1,0 +1,2 @@
+# Gitignored files that Claude Code copies into the worktrees it creates.
+CLAUDE.local.md
