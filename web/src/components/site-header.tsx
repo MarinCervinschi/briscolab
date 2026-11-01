@@ -8,10 +8,10 @@ import { m } from "@/paraglide/messages";
 import { localizeHref } from "@/paraglide/runtime";
 
 /**
- * The site's top bar (DESIGN.md, "Desktop"): the wordmark, the glass "Gioca / Lab" control with the current one as
+ * The site's top bar (DESIGN.md, "Desktop"): the wordmark, the glass "Gioca / Regole / Lab" control with the current one as
  * the inverted pill, and on the right the settings and the language. On a phone they fold into a menu.
  */
-export function SiteHeader({ current }: { current: "play" | "lab" }) {
+export function SiteHeader({ current }: { current: "play" | "rules" | "lab" }) {
 	const tab = (active: boolean) =>
 		cn(
 			"flex h-9 items-center rounded-full px-5 text-sm font-medium transition-colors",
@@ -32,6 +32,13 @@ export function SiteHeader({ current }: { current: "play" | "lab" }) {
 					className={tab(current === "play")}
 				>
 					{m.nav_play()}
+				</Link>
+				<Link
+					to="/rules"
+					aria-current={current === "rules" ? "page" : undefined}
+					className={tab(current === "rules")}
+				>
+					{m.nav_rules()}
 				</Link>
 				{/* The Lab is another app on the same site: a full page load. */}
 				<a
@@ -111,6 +118,9 @@ function PhoneMenu() {
 					<nav aria-label={m.nav_label()} className="flex flex-col gap-1">
 						<Link to="/" className={item} onClick={() => setOpen(false)}>
 							{m.nav_play()}
+						</Link>
+						<Link to="/rules" className={item} onClick={() => setOpen(false)}>
+							{m.nav_rules()}
 						</Link>
 						<a href={localizeHref("/lab")} className={item}>
 							{m.nav_lab()}

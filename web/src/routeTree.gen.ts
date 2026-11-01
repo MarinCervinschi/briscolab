@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as PlayRouteImport } from './routes/play'
+import { Route as RulesRouteImport } from './routes/rules'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as WatchRouteImport } from './routes/watch'
 import { Route as ApiSearchRouteImport } from './routes/api/search'
@@ -31,6 +32,11 @@ const CreditsRoute = CreditsRouteImport.update({
 const PlayRoute = PlayRouteImport.update({
   id: '/play',
   path: '/play',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RulesRoute = RulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/credits': typeof CreditsRoute
   '/play': typeof PlayRoute
+  '/rules': typeof RulesRoute
   '/settings': typeof SettingsRoute
   '/watch': typeof WatchRoute
   '/api/search': typeof ApiSearchRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/credits': typeof CreditsRoute
   '/play': typeof PlayRoute
+  '/rules': typeof RulesRoute
   '/settings': typeof SettingsRoute
   '/watch': typeof WatchRoute
   '/api/search': typeof ApiSearchRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/credits': typeof CreditsRoute
   '/play': typeof PlayRoute
+  '/rules': typeof RulesRoute
   '/settings': typeof SettingsRoute
   '/watch': typeof WatchRoute
   '/api/search': typeof ApiSearchRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/credits'
     | '/play'
+    | '/rules'
     | '/settings'
     | '/watch'
     | '/api/search'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/credits'
     | '/play'
+    | '/rules'
     | '/settings'
     | '/watch'
     | '/api/search'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/credits'
     | '/play'
+    | '/rules'
     | '/settings'
     | '/watch'
     | '/api/search'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreditsRoute: typeof CreditsRoute
   PlayRoute: typeof PlayRoute
+  RulesRoute: typeof RulesRoute
   SettingsRoute: typeof SettingsRoute
   WatchRoute: typeof WatchRoute
   ApiSearchRoute: typeof ApiSearchRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/play'
       fullPath: '/play'
       preLoaderRoute: typeof PlayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rules': {
+      id: '/rules'
+      path: '/rules'
+      fullPath: '/rules'
+      preLoaderRoute: typeof RulesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreditsRoute: CreditsRoute,
   PlayRoute: PlayRoute,
+  RulesRoute: RulesRoute,
   SettingsRoute: SettingsRoute,
   WatchRoute: WatchRoute,
   ApiSearchRoute: ApiSearchRoute,

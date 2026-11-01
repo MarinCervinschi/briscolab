@@ -120,8 +120,8 @@ favicon, seen at 16 to 32 px, keeps two cards with thicker outlines and no branc
 
 ### Desktop
 
-1. A glass top bar across the window: the wordmark on the left, the segmented "Gioca / Lab" control in the centre
-   with the current tab as the inverted pill, the level, the trick and "Abbandona" on the right.
+1. A glass top bar across the window: the wordmark on the left, the segmented "Gioca / Regole / Lab" control in the
+   centre with the current tab as the inverted pill, the level, the trick and "Abbandona" on the right.
 2. The table in a 1280 px column: the bar on the left, the bot's backs on top, then the deck and briscola, the
    card in play and both players' taken tricks in three columns, the hand at the bottom with keys 1–3 under it.
 3. The reasoning panel on the right, on `surface`.
@@ -176,8 +176,11 @@ sections stay visible.
 
 As in `SPEC.md`, plus a settings screen:
 
-- **Home and the other site pages**: the desktop top bar ("Gioca / Lab", the settings, the language). On a phone it
-  folds into a glass menu button whose panel lists Gioca, Lab, Impostazioni, Crediti e privacy and the language.
+- **Home and the other site pages**: the desktop top bar ("Gioca / Regole / Lab", the settings, the language). On a phone it
+  folds into a glass menu button whose panel lists Gioca, Regole, Lab, Impostazioni, Crediti e privacy and the language.
+- **Regole** (`/rules`): how to play, for someone who has never played. The real cards for the deck and the points,
+  the deck with the briscola under it, four tricks on the table whose winner shows on a tap, the drawing in steps,
+  120, 61 and 60–60, three tips, and links to a game at Easy and to two bots playing.
 - **Lab**: Fumadocs' own frame; its title carries a back arrow, and the sidebar opens with "Torna al gioco".
 
 - **Impostazioni** (`/settings`): the card back (drawing and style), the theme (system, light, dark) and sound, kept

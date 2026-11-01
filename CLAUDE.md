@@ -119,6 +119,8 @@ MLFLOW_TRACKING_URI=<tracking uri> uv run briscolab-arena --deals 10000 --mlflow
   Web Audio API; a card's sound is the `sound` prop of `MovingCard`. `SiteHeader` is the top bar of the site pages
   (a menu on phones); during a game `SoundToggle` switches sound, and on `/watch` on a phone a settings sheet holds
   sound, speed and the shown hands.
+- `/rules` explains the game to people, from `docs/rules.md`, with the real cards. Its examples are written by
+  hand, each with its answer, so no rule runs outside the engine.
 - Umami (`src/lib/analytics.ts`) counts page views and sends one `game_end` event per finished game. Its script's
   address and site id are build arguments (`VITE_UMAMI_SCRIPT_URL`, `VITE_UMAMI_WEBSITE_ID`) set by the deploy; without
   them nothing is sent. `/credits` holds the card credits and the privacy note.

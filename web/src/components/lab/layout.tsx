@@ -80,6 +80,7 @@ export function LabLayout({
 						url: lang === "it" ? "/" : "/en",
 						icon: <BackArrow />,
 					},
+					{ text: m.nav_rules(), url: localizeHref("/rules") },
 				]}
 				themeSwitch={{ enabled: false }}
 			>
