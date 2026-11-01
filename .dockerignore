@@ -2,9 +2,8 @@
 **/node_modules
 **/.terraform
 engine/target
-# Of the lab only the published results, which the Lab pages are built from.
-lab/*
-!lab/results
+# The lab is small apart from its virtualenv; the Lab pages read lab/results.
+lab/.venv
 infra
 web/dist
 web/src/paraglide
