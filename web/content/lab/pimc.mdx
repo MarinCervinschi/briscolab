@@ -1,0 +1,35 @@
+---
+title: PIMC
+description: Immagina 100 smazzate possibili e prova ogni carta su tutte. È il campione dell'arena.
+---
+
+PIMC sta per _perfect-information Monte Carlo_. Il bot non sa che carte ha l'avversario né in che ordine è il mazzo,
+ma sa quali carte non ha ancora visto. Allora immagina:
+
+1. **Distribuisce a caso** le carte che non conosce tra la mano dell'avversario e il mazzo, in modo coerente con
+   tutto quello che ha visto. Ne esce una smazzata possibile, a carte scoperte. Ne prepara 100.
+2. **Prova ogni sua carta** su tutte e 100. Dopo la carta, la partita va avanti con Hard per entrambi finché c'è il
+   mazzo, poi con il calcolo esatto di [Endgame](/lab/endgame).
+3. **Gioca la carta** con cui, sommando le 100 smazzate, chiude con più punti.
+
+Ogni carta è provata sulle stesse 100 smazzate, così la differenza fra due carte non dipende da quali smazzate sono
+uscite. A mazzo finito gioca esattamente, come Endgame. Il suo generatore parte da un seme, quindi una partita si
+rigioca identica.
+
+Il limite noto di questo metodo: nelle smazzate immaginate il bot vede tutte le carte, e può contare su informazioni
+che al tavolo non avrebbe.
+
+## Nell'arena
+
+È il campione: su 10 000 smazzate duplicate batte tutti tranne ISMCTS, con cui è alla pari.
+
+| Contro  | Punteggio di PIMC | Scarto per partita |
+| ------- | ----------------- | ------------------ |
+| Random  | 90,7% ± 0,4       | +45,2 punti        |
+| Greedy  | 62,5% ± 0,7       | +8,4 punti         |
+| Hard    | 69,9% ± 0,6       | +13,4 punti        |
+| Endgame | 64,6% ± 0,6       | +9,6 punti         |
+| ISMCTS  | 49,9% ± 0,7       | −0,1 punti         |
+
+Sul sito non ha un livello: al livello Esperto gioca ISMCTS, che vale quanto lui e si può fermare dopo un numero
+qualunque di simulazioni.

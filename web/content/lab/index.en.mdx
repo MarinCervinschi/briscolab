@@ -1,0 +1,35 @@
+---
+title: The Lab
+description: How Briscolab's bots think and how strong each one is, measured in the arena.
+---
+
+Briscolab compares bots that play two-player Briscola, from the simplest, which plays at random, to two search bots
+that simulate thousands of games before every card. Each bot sees only what a player at the table would see: its
+hand, the cards played, the briscola, how many cards are left in the deck.
+
+A bot becomes the champion only in the arena: everyone against everyone, 10 000 duplicate deals per pair, and an
+advantage counts only when its 95% interval excludes 50%. [How the arena works](/en/lab/arena).
+
+## The leaderboard
+
+From the latest published run, [“ismcts”](/en/lab/runs/ismcts), with six bots.
+
+<Ratings run="ismcts" />
+
+<VersusChampion run="ismcts" />
+
+PIMC and ISMCTS are level: 49.9% ± 0.7 for PIMC over 10 000 duplicate deals. PIMC stays the champion because it
+came first, and ISMCTS did not beat it.
+
+## The bots
+
+| Bot                        | Level on the site | How it chooses its card                    |
+| -------------------------- | ----------------- | ------------------------------------------ |
+| [Random](/en/lab/random)   | —                 | At random among the legal cards            |
+| [Greedy](/en/lab/greedy)   | Easy              | Wins the current trick when it pays        |
+| [Hard](/en/lab/hard)       | Medium            | Seven rules of an experienced player       |
+| [Endgame](/en/lab/endgame) | Hard              | Hard while the deck lasts, then exact play |
+| [PIMC](/en/lab/pimc)       | —                 | Tries each card on 100 imagined deals      |
+| [ISMCTS](/en/lab/ismcts)   | Expert            | A search tree over 1000 imagined deals     |
+
+Every published run is in the menu, under “Arena runs”.

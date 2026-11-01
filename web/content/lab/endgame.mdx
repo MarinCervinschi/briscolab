@@ -1,0 +1,32 @@
+---
+title: Endgame
+description: Hard finché c'è il mazzo, poi il gioco perfetto. È il livello Difficile.
+---
+
+Quando il mazzo finisce, a ogni giocatore restano tre carte, e ognuno sa esattamente quali ha l'altro: sono quelle
+che non sono ancora uscite. Da lì la partita è a informazione completa, e le ultime tre prese si possono calcolare
+fino in fondo.
+
+Endgame fa questo:
+
+- **Finché c'è il mazzo** gioca come [Hard](/lab/hard).
+- **A mazzo finito** prova ogni sua carta e, per ognuna, tutte le continuazioni possibili, supponendo che l'avversario
+  giochi a sua volta al meglio. Gioca la carta con cui chiude con più punti; a parità, quella con l'indice più basso.
+
+Il risultato è esatto: nessuna strategia dell'avversario gli toglie quei punti.
+
+Sul sito, a mazzo finito il ragionamento di Endgame mostra ogni sua carta con i punti con cui chiuderebbe, e la
+previsione nella barra. Prima mostra la regola di Hard.
+
+## Nell'arena
+
+Su 10 000 smazzate duplicate le ultime tre prese giocate bene bastano a battere Hard: 56,3% ± 0,3. Contro i bot che
+simulano anche il resto della partita perde:
+
+| Contro | Punteggio di Endgame | Scarto per partita |
+| ------ | -------------------- | ------------------ |
+| PIMC   | 35,4% ± 0,6          | −9,6 punti         |
+| ISMCTS | 37,6% ± 0,7          | −8,3 punti         |
+
+L'intervallo contro Hard è stretto, ± 0,3, perché i due bot giocano le stesse carte finché c'è il mazzo e si
+separano solo nelle ultime tre prese.

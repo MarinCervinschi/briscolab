@@ -1,0 +1,26 @@
+---
+title: Random
+description: Gioca una carta a caso tra quelle giocabili. Serve da pavimento.
+---
+
+Random sceglie con la stessa probabilità tra le carte che può giocare. Non guarda il tavolo, la briscola né i punti.
+
+Serve a una cosa sola: dare un pavimento all'arena. Un bot che non batte Random ha un errore, non una strategia
+debole.
+
+## Nell'arena
+
+Perde contro tutti, e di molto. Su 10 000 smazzate duplicate:
+
+| Contro  | Punteggio di Random | Scarto per partita |
+| ------- | ------------------- | ------------------ |
+| Greedy  | 10,9% ± 0,4         | −43,5 punti        |
+| Hard    | 13,0% ± 0,5         | −37,4 punti        |
+| Endgame | 10,3% ± 0,4         | −40,8 punti        |
+| PIMC    | 9,3% ± 0,4          | −45,2 punti        |
+| ISMCTS  | 8,2% ± 0,4          | −45,9 punti        |
+
+Random fa un po' meglio contro Hard che contro Greedy. Hard non spende briscole per prendere le carte senza carichi,
+quindi lascia a Random qualche presa che Greedy avrebbe preso.
+
+Sul sito non ha un livello: anche per chi impara, Greedy è un avversario più utile.

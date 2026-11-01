@@ -1,0 +1,42 @@
+---
+title: ISMCTS
+description: A search tree built over 1000 imagined deals. The Expert level.
+---
+
+ISMCTS stands for _information-set Monte Carlo tree search_, in the single-observer version of Cowling, Powley and
+Whitehouse (2012). Like [PIMC](/en/lab/pimc) it imagines deals consistent with what it knows, but instead of trying
+each card on all of them it builds one tree of the cards both sides play, from its own point of view.
+
+## One iteration
+
+1. **It imagines a new deal**, consistent with what it has seen.
+2. **It goes down the tree** among the cards legal in that deal, choosing by UCB1: it prefers the cards that have
+   paid best so far, but also tries those tried little.
+3. **It adds one card** to the tree.
+4. **It finishes the game** as PIMC does: Hard for both sides while the deck lasts, then exact play.
+5. **It reports the result** to every card on the path: the share of the 120 points the side that played it ends
+   with.
+
+After 1000 iterations it plays its most visited card. Once the deck is empty it plays exactly, like
+[Endgame](/en/lab/endgame).
+
+UCB1's exploration constant is 0.1, chosen in the arena. With the usual value, 0.7, the cards differ by a few
+hundredths and the search explored too much: with 1000 iterations it lost 45% to 55% against PIMC.
+
+## On the site
+
+It is the Expert level. The bot thinks in the browser, in a Web Worker, for at most one second per card; then it
+plays the best card found so far. The reasoning shows the forecast, the iterations, some of the hands it imagines
+for you and the cards it weighs.
+
+## In the arena
+
+Over 10 000 duplicate deals it is level with PIMC, 50.1% ± 0.7, and beats every other bot:
+
+| Against | ISMCTS's score | Margin per game |
+| ------- | -------------- | --------------- |
+| Random  | 91.8% ± 0.4    | +45.9 points    |
+| Greedy  | 64.2% ± 0.7    | +9.8 points     |
+| Hard    | 68.6% ± 0.6    | +12.8 points    |
+| Endgame | 62.4% ± 0.7    | +8.3 points     |
+| PIMC    | 50.1% ± 0.7    | +0.1 points     |

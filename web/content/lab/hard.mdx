@@ -1,0 +1,37 @@
+---
+title: Hard
+description: Le regole di un giocatore esperto, prese dal progetto Briscola in JavaFX. È il livello Medio.
+---
+
+Hard viene dal bot più forte di [Briscola](https://github.com/MarinCervinschi/Briscola), un progetto universitario in
+JavaFX. Gioca con sette regole, provate in quest'ordine:
+
+1. **Apre la presa**: scarta la sua carta meno preziosa.
+2. **Sul tavolo c'è il Tre di briscola** e lui ha l'Asso di briscola: prende con l'Asso.
+3. **Sul tavolo c'è un'altra briscola**: scarta la sua carta meno preziosa.
+4. **Sul tavolo c'è un Asso o un Tre di un altro seme** e lui ha l'Asso di quel seme: lo prende con l'Asso.
+5. **Sul tavolo c'è un Asso o un Tre di un altro seme** e lui non ha l'Asso: prende con la sua briscola più bassa, o
+   scarta la carta meno preziosa se non ha briscole.
+6. **Sul tavolo c'è un'altra carta**: risponde con la sua carta più forte di quel seme.
+7. **Non ha quel seme**: scarta la sua carta meno preziosa.
+
+La carta «meno preziosa» è la più debole tra le non briscole; se quella è un carico, la briscola più bassa.
+
+Il bot Java decideva anche come aprire stimando la probabilità che l'avversario potesse battere ogni carta. A inizio
+partita però la sola probabilità di una briscola superava la sua soglia del 50%, e il bot tornava alla regola 1 quasi
+sempre. Qui quella stima non c'è.
+
+Sul sito, il ragionamento di Hard è la frase della regola che ha usato.
+
+## Nell'arena
+
+Su 10 000 smazzate duplicate batte Greedy, 63,5% ± 0,7, e Random, 87,0% ± 0,5. Perde contro i bot che guardano
+avanti:
+
+| Contro  | Punteggio di Hard | Scarto per partita |
+| ------- | ----------------- | ------------------ |
+| Endgame | 43,7% ± 0,3       | −4,7 punti         |
+| PIMC    | 30,1% ± 0,6       | −13,4 punti        |
+| ISMCTS  | 31,4% ± 0,6       | −12,8 punti        |
+
+Hard è anche il giocatore che PIMC e ISMCTS usano dentro le loro simulazioni, finché c'è il mazzo.

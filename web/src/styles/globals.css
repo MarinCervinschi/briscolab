@@ -2,6 +2,8 @@
 /* Tailwind skips what .gitignore lists, but the Docker build has no .gitignore: without this it reads the client
    build in dist/ while building the server, and the prerendered pages link a stylesheet that does not exist. */
 @source not "../../dist";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
 @import "@fontsource/space-grotesk/400.css";
 @import "@fontsource/space-grotesk/500.css";
 @import "@fontsource/space-grotesk/600.css";
@@ -117,4 +119,40 @@
 		--back-h: calc(var(--hand-h) * 0.68);
 		--deck-h: calc(var(--hand-h) * 0.62);
 	}
+}
+
+/* The Lab: Fumadocs UI in the site's colours (DESIGN.md), whichever theme class it sets. */
+:root,
+:root.dark,
+:root.light {
+	--color-fd-background: var(--color-ground);
+	--color-fd-foreground: var(--color-text);
+	--color-fd-muted: var(--color-surface);
+	--color-fd-muted-foreground: var(--color-text-soft);
+	--color-fd-popover: var(--color-surface);
+	--color-fd-popover-foreground: var(--color-text);
+	--color-fd-card: var(--color-surface);
+	--color-fd-card-foreground: var(--color-text);
+	--color-fd-border: color-mix(in oklab, var(--color-text) 12%, transparent);
+	--color-fd-primary: var(--color-data);
+	--color-fd-primary-foreground: var(--color-ground);
+	--color-fd-secondary: var(--color-raised);
+	--color-fd-secondary-foreground: var(--color-text);
+	--color-fd-accent: color-mix(in oklab, var(--color-data) 16%, transparent);
+	--color-fd-accent-foreground: var(--color-text);
+	--color-fd-ring: var(--color-data);
+}
+
+/* The Lab's code blocks: Fumadocs gives Shiki's dark colours only under a .dark class, which the site does not set. */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) .shiki code span,
+	:root:not([data-theme="light"]) code.shiki span {
+		color: var(--shiki-dark);
+		font-style: var(--shiki-dark-font-style);
+	}
+}
+:root[data-theme="dark"] .shiki code span,
+:root[data-theme="dark"] code.shiki span {
+	color: var(--shiki-dark);
+	font-style: var(--shiki-dark-font-style);
 }

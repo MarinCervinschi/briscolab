@@ -2,6 +2,7 @@ import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
+import { fumadocsMdx } from "fumadocs-mdx/vite";
 import { readFileSync } from "node:fs";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
@@ -13,10 +14,13 @@ const engineVersion = /\[workspace\.package\][^[]*?version = "([^"]+)"/.exec(
 
 export default defineConfig({
 	define: { __ENGINE_VERSION__: JSON.stringify(engineVersion) },
+	// The Lab reads the arena's results from lab/results, outside web/.
+	server: { fs: { allow: [".."] } },
 	resolve: { tsconfigPaths: true },
 	// The engine's worker imports the WebAssembly module, so it is built as an ES module.
 	worker: { format: "es" },
 	plugins: [
+		fumadocsMdx(),
 		paraglideVitePlugin({
 			project: "./project.inlang",
 			outdir: "./src/paraglide",
@@ -38,6 +42,9 @@ export default defineConfig({
 				{ path: "/en/play" },
 				{ path: "/credits" },
 				{ path: "/en/credits" },
+				{ path: "/lab" },
+				{ path: "/en/lab" },
+				{ path: "/api/search" },
 			],
 		}),
 		viteReact(),

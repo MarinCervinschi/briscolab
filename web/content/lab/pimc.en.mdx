@@ -1,0 +1,35 @@
+---
+title: PIMC
+description: Imagines 100 possible deals and tries each card on all of them. The arena's champion.
+---
+
+PIMC stands for _perfect-information Monte Carlo_. The bot does not know which cards the opponent holds or the
+order of the deck, but it knows which cards it has not seen yet. So it imagines:
+
+1. **It deals at random** the cards it does not know between the opponent's hand and the deck, consistent with
+   everything it has seen. That gives one possible deal, face up. It prepares 100.
+2. **It tries each of its cards** on all 100. After the card, the game goes on with Hard for both sides while the
+   deck lasts, then with [Endgame](/en/lab/endgame)'s exact play.
+3. **It plays the card** it ends with the most points with, summed over the 100 deals.
+
+Every card is tried on the same 100 deals, so the difference between two cards does not depend on which deals came
+up. Once the deck is empty it plays exactly, like Endgame. Its generator starts from a seed, so a game can be
+replayed exactly.
+
+The known limit of the method: in the imagined deals the bot sees every card, and can count on information it would
+not have at the table.
+
+## In the arena
+
+It is the champion: over 10 000 duplicate deals it beats every bot except ISMCTS, with which it is level.
+
+| Against | PIMC's score | Margin per game |
+| ------- | ------------ | --------------- |
+| Random  | 90.7% ± 0.4  | +45.2 points    |
+| Greedy  | 62.5% ± 0.7  | +8.4 points     |
+| Hard    | 69.9% ± 0.6  | +13.4 points    |
+| Endgame | 64.6% ± 0.6  | +9.6 points     |
+| ISMCTS  | 49.9% ± 0.7  | −0.1 points     |
+
+It has no level on the site: the Expert level plays ISMCTS, which is as strong and can stop after any number of
+simulations.

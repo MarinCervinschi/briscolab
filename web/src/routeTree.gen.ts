@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as PlayRouteImport } from './routes/play'
+import { Route as ApiSearchRouteImport } from './routes/api/search'
+import { Route as LabSplatRouteImport } from './routes/lab/$'
+import { Route as LabRunsRunRouteImport } from './routes/lab/runs/$run'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +31,70 @@ const PlayRoute = PlayRouteImport.update({
   path: '/play',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSearchRoute = ApiSearchRouteImport.update({
+  id: '/api/search',
+  path: '/api/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabSplatRoute = LabSplatRouteImport.update({
+  id: '/lab/$',
+  path: '/lab/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabRunsRunRoute = LabRunsRunRouteImport.update({
+  id: '/lab/runs/$run',
+  path: '/lab/runs/$run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/credits': typeof CreditsRoute
   '/play': typeof PlayRoute
+  '/api/search': typeof ApiSearchRoute
+  '/lab/$': typeof LabSplatRoute
+  '/lab/runs/$run': typeof LabRunsRunRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/credits': typeof CreditsRoute
   '/play': typeof PlayRoute
+  '/api/search': typeof ApiSearchRoute
+  '/lab/$': typeof LabSplatRoute
+  '/lab/runs/$run': typeof LabRunsRunRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/credits': typeof CreditsRoute
   '/play': typeof PlayRoute
+  '/api/search': typeof ApiSearchRoute
+  '/lab/$': typeof LabSplatRoute
+  '/lab/runs/$run': typeof LabRunsRunRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/credits' | '/play'
+  fullPaths:
+    '/' | '/credits' | '/play' | '/api/search' | '/lab/$' | '/lab/runs/$run'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/credits' | '/play'
-  id: '__root__' | '/' | '/credits' | '/play'
+  to: '/' | '/credits' | '/play' | '/api/search' | '/lab/$' | '/lab/runs/$run'
+  id:
+    | '__root__'
+    | '/'
+    | '/credits'
+    | '/play'
+    | '/api/search'
+    | '/lab/$'
+    | '/lab/runs/$run'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreditsRoute: typeof CreditsRoute
   PlayRoute: typeof PlayRoute
+  ApiSearchRoute: typeof ApiSearchRoute
+  LabSplatRoute: typeof LabSplatRoute
+  LabRunsRunRoute: typeof LabRunsRunRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +120,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/search': {
+      id: '/api/search'
+      path: '/api/search'
+      fullPath: '/api/search'
+      preLoaderRoute: typeof ApiSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/$': {
+      id: '/lab/$'
+      path: '/lab/$'
+      fullPath: '/lab/$'
+      preLoaderRoute: typeof LabSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/runs/$run': {
+      id: '/lab/runs/$run'
+      path: '/lab/runs/$run'
+      fullPath: '/lab/runs/$run'
+      preLoaderRoute: typeof LabRunsRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +148,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreditsRoute: CreditsRoute,
   PlayRoute: PlayRoute,
+  ApiSearchRoute: ApiSearchRoute,
+  LabSplatRoute: LabSplatRoute,
+  LabRunsRunRoute: LabRunsRunRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

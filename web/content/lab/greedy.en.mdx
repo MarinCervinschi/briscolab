@@ -1,0 +1,33 @@
+---
+title: Greedy
+description: Looks only at the trick in front of it. The Easy level.
+---
+
+Greedy looks one card ahead: the trick in progress. It takes no account of the cards already played or of those
+still to come.
+
+## How it chooses
+
+- **Leading**, it plays its cheapest card.
+- **Answering**, it works out for each card what it gets from this trick: the points on the table if the card wins,
+  the same points negative if it loses. It plays the best card.
+- **When no card wins, or none is worth it**, it gives the card that gives away the fewest points.
+
+Ties go to the cheapest card: non-briscole first, then points, then strength. It is deterministic: in the same
+position it always plays the same card.
+
+On the site, Greedy's reasoning is the sentence of the rule it used.
+
+## In the arena
+
+Over 10 000 duplicate deals it beats Random, 89.1% ± 0.4, and loses to every other bot:
+
+| Against | Greedy's score | Margin per game |
+| ------- | -------------- | --------------- |
+| Hard    | 36.5% ± 0.7    | −9.3 points     |
+| Endgame | 34.7% ± 0.7    | −10.1 points    |
+| PIMC    | 37.5% ± 0.7    | −8.4 points     |
+| ISMCTS  | 35.8% ± 0.7    | −9.8 points     |
+
+Greedy spends a briscola even to take two points, because it looks only at this trick. Hard, which beats it, keeps
+its briscole for the carichi.

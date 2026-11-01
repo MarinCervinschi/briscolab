@@ -1,0 +1,37 @@
+---
+title: Hard
+description: An experienced player's rules, taken from the JavaFX Briscola project. The Medium level.
+---
+
+Hard comes from the strongest bot of [Briscola](https://github.com/MarinCervinschi/Briscola), a JavaFX university
+project. It plays by seven rules, tried in this order:
+
+1. **Leading**: it throws away its cheapest card.
+2. **The Tre di briscola is on the table** and it holds the Asso di briscola: it takes with the Asso.
+3. **Another briscola is on the table**: it throws away its cheapest card.
+4. **An Asso or a Tre of another suit is on the table** and it holds the Asso of that suit: it takes with the Asso.
+5. **An Asso or a Tre of another suit is on the table** and it does not hold the Asso: it takes with its lowest
+   briscola, or throws away its cheapest card if it has no briscola.
+6. **Any other card is on the table**: it answers with its strongest card of that suit.
+7. **It does not hold that suit**: it throws away its cheapest card.
+
+The “cheapest” card is the weakest non-briscola; if that is a carico, the lowest briscola instead.
+
+The Java bot also chose how to lead by estimating the odds that the opponent could beat each card. Early in a game,
+though, the odds of a briscola alone passed its 50% threshold, and the bot fell back to rule 1 nearly every time.
+That estimate is not here.
+
+On the site, Hard's reasoning is the sentence of the rule it used.
+
+## In the arena
+
+Over 10 000 duplicate deals it beats Greedy, 63.5% ± 0.7, and Random, 87.0% ± 0.5. It loses to the bots that look
+ahead:
+
+| Against | Hard's score | Margin per game |
+| ------- | ------------ | --------------- |
+| Endgame | 43.7% ± 0.3  | −4.7 points     |
+| PIMC    | 30.1% ± 0.6  | −13.4 points    |
+| ISMCTS  | 31.4% ± 0.6  | −12.8 points    |
+
+Hard is also the player PIMC and ISMCTS use inside their simulations, while the deck lasts.

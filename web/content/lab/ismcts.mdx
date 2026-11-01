@@ -1,0 +1,40 @@
+---
+title: ISMCTS
+description: Un albero di ricerca costruito su 1000 smazzate immaginate. È il livello Esperto.
+---
+
+ISMCTS sta per _information-set Monte Carlo tree search_, nella versione con un solo osservatore di Cowling, Powley
+e Whitehouse (2012). Come [PIMC](/lab/pimc) immagina smazzate coerenti con quello che sa, ma invece di provare ogni
+carta su tutte costruisce un unico albero delle carte giocate dai due, dal suo punto di vista.
+
+## Un'iterazione
+
+1. **Immagina una smazzata nuova**, coerente con quello che ha visto.
+2. **Scende nell'albero** tra le carte giocabili in quella smazzata, scegliendo con UCB1: preferisce le carte che
+   finora hanno reso di più, ma prova anche quelle provate poco.
+3. **Aggiunge una carta** all'albero.
+4. **Finisce la partita** come PIMC: Hard per entrambi finché c'è il mazzo, poi il calcolo esatto.
+5. **Riporta il risultato** su ogni carta del percorso: la parte dei 120 punti con cui chiude chi l'ha giocata.
+
+Dopo 1000 iterazioni gioca la carta più visitata. A mazzo finito gioca esattamente, come [Endgame](/lab/endgame).
+
+La costante di esplorazione di UCB1 è 0,1, scelta nell'arena. Con il valore abituale, 0,7, le carte si
+differenziano di pochi centesimi e la ricerca esplorava troppo: con 1000 iterazioni perdeva 45% a 55% contro PIMC.
+
+## Sul sito
+
+È il livello Esperto. Il bot pensa nel browser, in un Web Worker, per al massimo un secondo per carta; poi gioca la
+carta migliore trovata fin lì. Il ragionamento mostra la previsione, le iterazioni, alcune delle mani che immagina
+per te e le carte che valuta.
+
+## Nell'arena
+
+Su 10 000 smazzate duplicate è alla pari con PIMC, 50,1% ± 0,7, e batte tutti gli altri:
+
+| Contro  | Punteggio di ISMCTS | Scarto per partita |
+| ------- | ------------------- | ------------------ |
+| Random  | 91,8% ± 0,4         | +45,9 punti        |
+| Greedy  | 64,2% ± 0,7         | +9,8 punti         |
+| Hard    | 68,6% ± 0,6         | +12,8 punti        |
+| Endgame | 62,4% ± 0,7         | +8,3 punti         |
+| PIMC    | 50,1% ± 0,7         | +0,1 punti         |

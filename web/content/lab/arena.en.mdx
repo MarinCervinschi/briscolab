@@ -1,0 +1,45 @@
+---
+title: The arena
+description: How we measure the bots' strength, and when one bot beats another.
+---
+
+Briscola has a lot of luck in it: whoever is dealt the carichi and the briscole starts ahead, whatever the opponent
+does. To compare two bots the arena has to take that luck out, and say when a difference is real and when it is
+noise.
+
+## Duplicate deals
+
+Every deal is played twice from the same shuffle: in the second game the two bots swap seats. If the cards favour a
+seat, they favour each bot once.
+
+A bot's score on a deal is the mean of its two games: 1 for a win (more than 60 points), 0.5 for a 60-60 draw, 0
+for a loss. The margin is the mean point difference per game.
+
+Every pair of bots plays the same seeds: in the published runs, deals 0 to 9999. Every game can be replayed exactly
+from its seed.
+
+## Intervals
+
+For every pair the arena computes the mean score over 10 000 deals and its 95% interval, by the normal
+approximation. A bot **beats** another only when the whole interval of its score lies above 50%, as PIMC's
+69.9% ± 0.6 against Hard does. When the interval includes 50%, like ISMCTS's 50.1% ± 0.7 against PIMC, the two bots
+cannot be told apart.
+
+The champion changes only this way: watching a few games is not enough.
+
+## Ratings
+
+From the results of every pair the arena computes a Bradley-Terry rating per bot, with Hunter's MM algorithm (2004),
+on the Elo scale: a gap of 400 points means 10 to 1 odds, and the mean is 0. The rating puts the bots in a line, but
+it is the head-to-head score with its interval that says who beats whom.
+
+## What we publish
+
+Each published run is a JSON file in `lab/results` in the repository, with the bots, the number of deals, the first
+seed, the engine version and the commit it was written from. Each file has its page in this Lab, under “Arena runs”,
+and anyone can play it again:
+
+```bash
+cd lab
+uv run briscolab-arena --deals 10000 --out results/ismcts.json
+```

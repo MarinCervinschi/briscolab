@@ -1,0 +1,32 @@
+---
+title: Greedy
+description: Guarda solo la presa che ha davanti. È il livello Facile.
+---
+
+Greedy guarda una sola carta avanti: la presa in corso. Non tiene conto delle carte uscite né di quelle che verranno.
+
+## Come sceglie
+
+- **Se apre la presa**, gioca la sua carta meno preziosa.
+- **Se risponde**, per ogni carta che ha calcola cosa ottiene in questa presa: i punti sul tavolo se la carta vince,
+  gli stessi punti in negativo se perde. Gioca la carta migliore.
+- **Se nessuna carta vince, o non conviene**, dà la carta che regala meno punti.
+
+A parità sceglie sempre la carta meno preziosa: prima le non briscole, poi i punti, poi la forza. È deterministico:
+nella stessa situazione gioca sempre la stessa carta.
+
+Sul sito, il ragionamento di Greedy è la frase della regola che ha usato.
+
+## Nell'arena
+
+Su 10 000 smazzate duplicate batte Random, 89,1% ± 0,4, e perde contro tutti gli altri:
+
+| Contro  | Punteggio di Greedy | Scarto per partita |
+| ------- | ------------------- | ------------------ |
+| Hard    | 36,5% ± 0,7         | −9,3 punti         |
+| Endgame | 34,7% ± 0,7         | −10,1 punti        |
+| PIMC    | 37,5% ± 0,7         | −8,4 punti         |
+| ISMCTS  | 35,8% ± 0,7         | −9,8 punti         |
+
+Greedy spende una briscola anche per prendere due punti, perché guarda solo questa presa. Hard, che lo batte, tiene
+le briscole per i carichi.

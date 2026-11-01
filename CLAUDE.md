@@ -5,7 +5,7 @@ The rules the engine implements: `docs/rules.md`.
 
 **Status (2026-10-30): milestone 4, the site, tracked in epic #1 and its sub-issues.** The engine (`engine/core`), its Python binding (`engine/py`),
 the arena (`lab/`, logging to MLflow) and the search bots exist; PIMC is the champion, ISMCTS ties it. `web/` has its
-scaffold (static, bilingual, offline); it plays the four levels; the Lab is not built yet. It is deployed to
+scaffold (static, bilingual, offline); it plays the four levels and holds the Lab. It is deployed to
 `briscolab.cervinschi.site`.
 
 ## Layout
@@ -113,6 +113,12 @@ MLFLOW_TRACKING_URI=http://100.89.8.106:5000 uv run briscolab-arena --deals 1000
 - Umami (`src/lib/analytics.ts`) counts page views and sends one `game_end` event per finished game. Its script's
   address and site id are build arguments (`VITE_UMAMI_SCRIPT_URL`, `VITE_UMAMI_WEBSITE_ID`) set by the deploy; without
   them nothing is sent. `/credits` holds the card credits and the privacy note.
+- The Lab is Fumadocs UI under `/lab` and `/en/lab`, themed with the site's tokens in `globals.css`. Articles are
+  `content/lab/<name>.mdx` (Italian) and `<name>.en.mdx` (English), ordered by `meta.json`. Every file in
+  `lab/results` gets a page at `/lab/runs/<name>` with no code change. The charts (`src/components/lab/charts.tsx`)
+  are HTML and CSS rendered at build, and an article uses them as `<Ratings run="ismcts" />`. On a static site
+  the loaders are server functions with `staticFunctionMiddleware`, and search is the index prerendered at
+  `/api/search`.
 
 ```bash
 cd web

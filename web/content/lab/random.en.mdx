@@ -1,0 +1,27 @@
+---
+title: Random
+description: Plays a random card among the legal ones. It is the floor.
+---
+
+Random picks with equal probability among the cards it may play. It looks at neither the table, the briscola nor
+the points.
+
+It is there for one thing: to give the arena a floor. A bot that does not beat Random has a bug, not a weak
+strategy.
+
+## In the arena
+
+It loses to everyone, by a lot. Over 10 000 duplicate deals:
+
+| Against | Random's score | Margin per game |
+| ------- | -------------- | --------------- |
+| Greedy  | 10.9% ± 0.4    | −43.5 points    |
+| Hard    | 13.0% ± 0.5    | −37.4 points    |
+| Endgame | 10.3% ± 0.4    | −40.8 points    |
+| PIMC    | 9.3% ± 0.4     | −45.2 points    |
+| ISMCTS  | 8.2% ± 0.4     | −45.9 points    |
+
+Random does a little better against Hard than against Greedy. Hard does not spend briscole on tricks without a
+carico, so it leaves Random some tricks that Greedy would take.
+
+It has no level on the site: even for a beginner, Greedy is a more useful opponent.

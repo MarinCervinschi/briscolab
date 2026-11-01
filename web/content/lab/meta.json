@@ -1,0 +1,13 @@
+{
+	"pages": [
+		"index",
+		"arena",
+		"---I bot---",
+		"random",
+		"greedy",
+		"hard",
+		"endgame",
+		"pimc",
+		"ismcts"
+	]
+}

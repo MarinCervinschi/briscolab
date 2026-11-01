@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { LanguageLink } from "@/components/language-link";
 import { LEVELS } from "@/lib/levels";
 import { m } from "@/paraglide/messages";
+import { localizeHref } from "@/paraglide/runtime";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -11,7 +12,15 @@ function Home() {
 		<main className="mx-auto flex min-h-dvh max-w-5xl flex-col gap-12 px-4 py-6 sm:px-8">
 			<header className="flex items-center justify-between">
 				<span className="text-xl font-bold tracking-tight">Briscolab</span>
-				<LanguageLink />
+				<nav className="flex items-center gap-2">
+					<a
+						href={localizeHref("/lab")}
+						className="hover:bg-surface flex h-11 items-center rounded-full px-4 text-sm font-medium transition-colors"
+					>
+						{m.home_lab()}
+					</a>
+					<LanguageLink />
+				</nav>
 			</header>
 			<section className="flex flex-col gap-5 pt-12">
 				<h1 className="text-6xl font-bold tracking-[-0.045em] sm:text-8xl">

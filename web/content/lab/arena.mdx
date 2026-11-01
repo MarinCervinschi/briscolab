@@ -1,0 +1,45 @@
+---
+title: L'arena
+description: Come misuriamo la forza dei bot, e quando un bot ne batte un altro.
+---
+
+La briscola ha molta fortuna: chi riceve i carichi e le briscole parte avanti, qualunque cosa faccia l'avversario.
+Per confrontare due bot l'arena deve togliere di mezzo quella fortuna, e dire quando una differenza è vera e quando
+è rumore.
+
+## Le smazzate duplicate
+
+Ogni smazzata si gioca due volte con lo stesso mazzo mescolato: nella seconda partita i due bot si scambiano il
+posto. Se le carte favoriscono un posto, favoriscono entrambi i bot una volta ciascuno.
+
+Il punteggio di un bot in una smazzata è la media delle sue due partite: 1 per una vittoria (più di 60 punti), 0,5
+per un pareggio a 60, 0 per una sconfitta. Lo scarto è la differenza media di punti per partita.
+
+Ogni coppia di bot gioca gli stessi semi: nei run pubblicati, le smazzate da 0 a 9999. Ogni partita si può
+rigiocare identica dal suo seme.
+
+## Gli intervalli
+
+Per ogni coppia l'arena calcola il punteggio medio su 10 000 smazzate e il suo intervallo al 95%, con
+l'approssimazione normale. Un bot **batte** un altro solo se l'intervallo del suo punteggio sta tutto sopra il 50%,
+per esempio 69,9% ± 0,6 di PIMC contro Hard. Se l'intervallo comprende il 50%, come il 50,1% ± 0,7 di ISMCTS contro
+PIMC, i due bot non si distinguono.
+
+Il campione cambia solo così: guardare qualche partita non basta.
+
+## I rating
+
+Dai risultati di tutte le coppie l'arena calcola un rating Bradley-Terry per bot, con l'algoritmo MM di Hunter
+(2004), sulla scala Elo: 400 punti di distacco valgono una probabilità di 10 a 1, e la media è 0. Il rating mette i
+bot in fila, ma è il confronto diretto con il suo intervallo a dire chi batte chi.
+
+## Cosa pubblichiamo
+
+Ogni run pubblicato è un file JSON in `lab/results` nel repository, con i bot, il numero di smazzate, il primo
+seme, la versione del motore e il commit da cui è stato scritto. Ogni file ha la sua pagina in questo Lab, sotto
+«Run dell'arena», e chiunque può rigiocarlo:
+
+```bash
+cd lab
+uv run briscolab-arena --deals 10000 --out results/ismcts.json
+```
