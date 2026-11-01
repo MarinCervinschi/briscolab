@@ -19,6 +19,7 @@ WORKDIR /src
 COPY web/package.json web/pnpm-lock.yaml web/
 RUN cd web && pnpm install --frozen-lockfile
 COPY engine engine
+COPY lab/results lab/results
 COPY web web
 # Umami's script and site, given by the deploy; without them the site sends no analytics.
 ARG VITE_UMAMI_SCRIPT_URL

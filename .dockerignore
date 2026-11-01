@@ -2,7 +2,9 @@
 **/node_modules
 **/.terraform
 engine/target
-lab
+# Of the lab only the published results, which the Lab pages are built from.
+lab/*
+!lab/results
 infra
 web/dist
 web/src/paraglide
