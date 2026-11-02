@@ -8,6 +8,7 @@ pub mod card;
 pub mod card_set;
 pub mod duplicate;
 pub mod game;
+pub mod network;
 pub mod observation;
 pub mod player;
 pub mod rng;
@@ -16,13 +17,14 @@ pub mod trick;
 
 pub use bot::{
     play_out, Bot, CardStats, EndgameBot, EndgameReason, GreedyBot, GreedyRule, HardBot, HardRule,
-    Hypothesis, IsmctsBot, IsmctsSearch, PimcBot, RandomBot,
+    Hypothesis, IsmctsBot, IsmctsSearch, PimcBot, PpoBot, RandomBot, ShapeError,
 };
 pub use card::{Card, Rank, Suit, DECK_SIZE, TOTAL_POINTS};
 pub use card_set::CardSet;
 pub use duplicate::play_duplicate;
 pub use game::{DeckError, Game, Outcome, PlayError, HAND_SIZE, STOCK_SIZE, TRICKS};
-pub use observation::Observation;
+pub use network::{Network, WeightsError};
+pub use observation::{Observation, ENCODING_LEN};
 pub use player::{Player, PLAYERS};
 pub use rng::Rng;
 pub use solver::{solve, solve_each};

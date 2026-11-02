@@ -23,17 +23,19 @@ scaffold (static, bilingual, offline); it plays the four levels and holds the La
 
 - `engine/core` (crate `briscolab-core`, no dependencies), one concept per module: `card.rs` (`Card`, `Suit`,
   `Rank`), `card_set.rs` (`CardSet`, a bitset over a `u64`), `player.rs`, `trick.rs` (`Trick`, `trick_winner`),
-  `game.rs` (`Game`: deal, drawing, scoring, end), `observation.rs` (what one player knows), `rng.rs`
+  `game.rs` (`Game`: deal, drawing, scoring, end), `observation.rs` (what one player knows, and `encode`, the
+  204 numbers a network reads), `network.rs` (`Network`: an MLP's forward pass and its weights file, read from bytes), `rng.rs`
   (xoshiro256** seeded by SplitMix64, same numbers on every platform), `bot/` (`Bot::act` and `play_out` in
-  `mod.rs`, one file per bot: `random.rs`, `greedy.rs`, `hard.rs`, `endgame.rs`, `pimc.rs`, `ismcts.rs`; `playout`
+  `mod.rs`, one file per bot: `random.rs`, `greedy.rs`, `hard.rs`, `endgame.rs`, `pimc.rs`, `ismcts.rs`, `ppo.rs`, the network while the deck lasts and then the solver; `playout`
   in `mod.rs` is the search bots' rollout: Hard while the deck lasts, then the solver), `duplicate.rs`
   (`play_duplicate`: one shuffle, seats swapped), `solver.rs` (`solve`: exact play once every card is known).
 - `Game::determinise(obs, rng)` builds a full game consistent with an observation, dealing the cards the player
   cannot place at random; with the deck empty it is the real game. Search bots work on these, never on the real
   `Game`.
 - `engine/py` (crate `briscolab-py`, Python module `briscolab_engine`, built by maturin): translation only.
-  It chooses bots by name in `make_bot` (`pimc:<n>` sets PIMC's determinisations and `ismcts:<n>` ISMCTS's
-  iterations; alone they are 100 and 1000); a new bot goes there and in `BOT_NAMES`. `play_duplicates` plays a
+  `parse_bot` reads a bot's name once per batch (`pimc:<n>` sets PIMC's determinisations and `ismcts:<n>`
+  ISMCTS's iterations, alone 100 and 1000; `ppo:<file>` reads a network's weights) and `make_bot` builds it per
+  deal; a new bot goes there and in `BOT_NAMES`. `play_duplicates` plays a
   batch of deals on every core with rayon, the only threads in the engine: `core` stays single-threaded.
 - The bots explain their card next to `act`: `GreedyBot::choose` and `HardBot::choose` return the rule that fired,
   `EndgameBot::choose` that rule or every card's exact result (`solve_each`), and `IsmctsSearch` is ISMCTS in
@@ -48,7 +50,7 @@ scaffold (static, bilingual, offline); it plays the four levels and holds the La
 - Tests: `tests/rules.rs` (hand-checked positions and a hand-traced full game), `tests/properties.rs` (invariants
   over thousands of seeded games, plus a recorded game that pins the generator), `tests/bots.rs` (the contract
   every bot honours, legal moves and reproducibility, plus each deterministic bot's choices; a new bot goes into
-  the list in `bots()` there), `tests/search.rs` (determinisation shows the player exactly their observation; the
+  the list in `bots()` there), `tests/network.rs` (the encoding, the weights file, the forward pass and the network bot), `tests/search.rs` (determinisation shows the player exactly their observation; the
   solver on a hand-traced endgame and its guarantee against any opponent; PIMC and ISMCTS play exactly once the
   deck is empty; ISMCTS in steps; a recorded ISMCTS game, which `web/src/engine/engine.test.ts` replays in
   WebAssembly).

@@ -1,9 +1,15 @@
 //! What one player knows about a game.
 
-use crate::card::{Card, Suit};
+use crate::card::{Card, Suit, DECK_SIZE, TOTAL_POINTS};
 use crate::card_set::CardSet;
 use crate::player::{Player, PLAYERS};
 use crate::trick::Trick;
+
+/// The length of [`Observation::encode`]: five sets of 40 cards and four numbers.
+pub const ENCODING_LEN: usize = 5 * DECK_SIZE + 4;
+
+/// The cards left to draw just after the deal, the face-up briscola included.
+const DECK_AFTER_DEAL: f32 = 34.0;
 
 /// One player's view of the game: what they can see or remember, and nothing else.
 ///
@@ -69,5 +75,32 @@ impl Observation {
         let mut known = self.hand.union(self.seen());
         known.insert(self.briscola);
         known.complement()
+    }
+
+    /// The observation as a network's input, from this player's side: the hand, the cards on the table, the cards
+    /// played in finished tricks, the opponent's known cards and the face-up briscola, one number per card; then this
+    /// player's points and the opponent's over 120, the cards left to draw over 34, and 1 if this player leads.
+    pub fn encode(&self) -> [f32; ENCODING_LEN] {
+        let mut input = [0.0; ENCODING_LEN];
+        let sets = [
+            self.hand,
+            self.table.iter().copied().collect(),
+            self.played,
+            self.known_opponent_cards(),
+            [self.briscola].into_iter().collect(),
+        ];
+        for (i, set) in sets.into_iter().enumerate() {
+            for card in set {
+                input[i * DECK_SIZE + usize::from(card.index())] = 1.0;
+            }
+        }
+        let points =
+            |p: Player| f32::from(self.taken[p.index()].points()) / f32::from(TOTAL_POINTS);
+        let numbers = 5 * DECK_SIZE;
+        input[numbers] = points(self.player);
+        input[numbers + 1] = points(self.player.next());
+        input[numbers + 2] = self.deck_len as f32 / DECK_AFTER_DEAL;
+        input[numbers + 3] = if self.leader == self.player { 1.0 } else { 0.0 };
+        input
     }
 }

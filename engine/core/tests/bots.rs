@@ -21,6 +21,11 @@ fn bots() -> Vec<(&'static str, MakeBot)> {
         ("endgame", |_| Box::new(EndgameBot)),
         ("pimc", |seed| Box::new(PimcBot::new(4, seed))),
         ("ismcts", |seed| Box::new(IsmctsBot::new(8, seed))),
+        ("ppo", |seed| {
+            let sizes = [ENCODING_LEN, 16, DECK_SIZE];
+            let network = Network::random(&sizes, &mut Rng::new(seed));
+            Box::new(PpoBot::new(std::sync::Arc::new(network)).unwrap())
+        }),
     ]
 }
 

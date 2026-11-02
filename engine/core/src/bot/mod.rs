@@ -5,6 +5,7 @@ mod greedy;
 mod hard;
 mod ismcts;
 mod pimc;
+mod ppo;
 mod random;
 
 pub use endgame::{EndgameBot, EndgameReason};
@@ -12,6 +13,7 @@ pub use greedy::{GreedyBot, GreedyRule};
 pub use hard::{HardBot, HardRule};
 pub use ismcts::{CardStats, Hypothesis, IsmctsBot, IsmctsSearch};
 pub use pimc::PimcBot;
+pub use ppo::{PpoBot, ShapeError};
 pub use random::RandomBot;
 
 use crate::card::{Card, TOTAL_POINTS};
