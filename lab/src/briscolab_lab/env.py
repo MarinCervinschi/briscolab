@@ -49,7 +49,8 @@ class TrainingEnv:
 
     def _step(self, obs: bytes, masks: bytes, seats: bytes, done: bytes, rewards: bytes) -> Step:
         return Step(
-            obs=np.frombuffer(obs, dtype="<f4").reshape(self.n, ENCODING_LEN),
+            # Copied, since an array over bytes is read-only and PyTorch wants to own what it reads.
+            obs=np.frombuffer(obs, dtype="<f4").reshape(self.n, ENCODING_LEN).copy(),
             masks=np.frombuffer(masks, dtype=np.uint8).reshape(self.n, CARDS).astype(np.bool_),
             seats=np.frombuffer(seats, dtype=np.uint8),
             done=np.frombuffer(done, dtype=np.uint8).astype(np.bool_),

@@ -75,6 +75,10 @@ cargo build -p briscolab-core --target wasm32-unknown-unknown
   the Rust sources change. Dev tools: pytest, ruff (lint and format, 100 columns), pyright in strict mode.
 - `env.py` (`TrainingEnv`: `VecEnv` as numpy arrays). `experiments/env_speed.py` measures it: about 900 000
   choices a second on one core of the M4, so the network, not the environment, bounds training.
+- `ppo.py` (the `briscolab-ppo` command): PPO in self-play, CleanRL-style in one file. It trains on whole games
+  against the pool of `Config` (self-play, the last snapshots as `ppo:<file>`, Greedy and Hard), scores the network
+  against Hard and, less often, PIMC on deals from seed 1 000 000, and writes `config.json`, `current.brnn`,
+  `best.brnn` and `snapshots/` under `runs/<name>` (ignored). `--mlflow` logs to experiment `briscolab-ppo`.
 - `stats.py` (score per duplicate deal, 95% intervals, Bradley-Terry ratings), `arena.py` (`Config`, `run`, the
   report and the JSON results), `tracking.py` (one MLflow run per round robin, experiment `briscolab-arena`),
   `__main__.py` (the `briscolab-arena` command).
@@ -92,6 +96,7 @@ uv run pytest
 uv run ruff check . && uv run ruff format --check .
 uv run pyright
 uv run briscolab-arena --deals 10000 --out results/<name>.json
+caffeinate -i uv run briscolab-ppo --run-name <name> --minutes 480 --mlflow
 MLFLOW_TRACKING_URI=<tracking uri> uv run briscolab-arena --deals 10000 --mlflow --run-name <name>
 ```
 

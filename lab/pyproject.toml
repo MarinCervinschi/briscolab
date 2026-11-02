@@ -8,10 +8,12 @@ dependencies = [
     "briscolab-engine",
     "mlflow-skinny>=3.17,<3.18",
     "numpy>=2.5.4",
+    "torch>=2.15.0",
 ]
 
 [project.scripts]
 briscolab-arena = "briscolab_lab.__main__:main"
+briscolab-ppo = "briscolab_lab.ppo:main"
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.9", "pyright[nodejs]>=1.1.390"]

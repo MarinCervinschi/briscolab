@@ -107,6 +107,39 @@ fn play_duplicates(py: Python<'_>, seeds: Vec<u64>, a: &str, b: &str) -> PyResul
     .map_err(PyRuntimeError::new_err)
 }
 
+/// The outputs of the network in `weights` (a weights file's bytes) for each input in `inputs`, both as little-endian
+/// `float32` rows: the check that the engine computes what PyTorch does.
+#[pyfunction]
+fn network_forward<'py>(
+    py: Python<'py>,
+    weights: &[u8],
+    inputs: &[u8],
+) -> PyResult<Bound<'py, PyBytes>> {
+    let network = Network::from_bytes(weights).map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let row = network.inputs() * 4;
+    if !inputs.len().is_multiple_of(row) {
+        return Err(PyValueError::new_err(format!(
+            "inputs of {} bytes are not rows of {} numbers",
+            inputs.len(),
+            network.inputs()
+        )));
+    }
+    let (mut a, mut b) = (vec![0.0; network.width()], vec![0.0; network.width()]);
+    let mut out = Vec::new();
+    for chunk in inputs.chunks_exact(row) {
+        let input: Vec<f32> = chunk
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|&x| f32::from_le_bytes(x))
+            .collect();
+        for y in network.forward(&input, &mut a, &mut b) {
+            out.extend_from_slice(&y.to_le_bytes());
+        }
+    }
+    Ok(PyBytes::new(py, &out))
+}
+
 /// One game of the batch: what plays it and the game itself.
 struct Slot {
     /// `None` for self-play: both seats wait for their cards.
@@ -281,6 +314,7 @@ fn briscolab_engine(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add_function(wrap_pyfunction!(bot_names, m)?)?;
     m.add_function(wrap_pyfunction!(play_duplicates, m)?)?;
+    m.add_function(wrap_pyfunction!(network_forward, m)?)?;
     m.add_class::<VecEnv>()?;
     Ok(())
 }
