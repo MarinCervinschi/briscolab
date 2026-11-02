@@ -3,10 +3,12 @@
 use std::sync::Arc;
 
 use briscolab_core::{
-    Bot, EndgameBot, GreedyBot, HardBot, IsmctsBot, Network, PimcBot, PpoBot, RandomBot,
+    Bot, Card, EndgameBot, GreedyBot, HardBot, IsmctsBot, Network, Outcome, PimcBot, PpoBot,
+    RandomBot, TrainingGame, DECK_SIZE, ENCODING_LEN,
 };
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
+use pyo3::types::PyBytes;
 use rayon::prelude::*;
 
 const BOT_NAMES: [&str; 6] = ["random", "greedy", "hard", "endgame", "pimc", "ismcts"];
@@ -61,7 +63,7 @@ fn parse_bot(name: &str) -> Result<BotSpec, String> {
     }
 }
 
-fn make_bot(spec: &BotSpec, seed: u64) -> Box<dyn Bot> {
+fn make_bot(spec: &BotSpec, seed: u64) -> Box<dyn Bot + Send> {
     match spec {
         BotSpec::Random => Box::new(RandomBot::new(seed)),
         BotSpec::Greedy => Box::new(GreedyBot),
@@ -105,10 +107,180 @@ fn play_duplicates(py: Python<'_>, seeds: Vec<u64>, a: &str, b: &str) -> PyResul
     .map_err(PyRuntimeError::new_err)
 }
 
+/// One game of the batch: what plays it and the game itself.
+struct Slot {
+    /// `None` for self-play: both seats wait for their cards.
+    opponent: Option<BotSpec>,
+    played: u64,
+    game: TrainingGame,
+}
+
+/// Many training games stepped together, so Python crosses into Rust once per batch of cards. Every slot always
+/// waits for one card: a finished game is replaced at once by the next deal. The numbers come back as raw bytes,
+/// little-endian, for `numpy.frombuffer`.
+// Used from one Python thread, so the bots need not be `Sync`.
+#[pyclass(module = "briscolab_engine", unsendable)]
+struct VecEnv {
+    slots: Vec<Slot>,
+    next_seed: u64,
+}
+
+/// The arrays of one step: the encoded observation, the legal cards and the seat to play of every slot.
+type Observed<'py> = (
+    Bound<'py, PyBytes>,
+    Bound<'py, PyBytes>,
+    Bound<'py, PyBytes>,
+);
+
+impl VecEnv {
+    /// The next deal for a slot. Against a bot the waiting seat alternates from one game to the next.
+    fn deal(&mut self, opponent: Option<&BotSpec>, played: u64) -> TrainingGame {
+        let seed = self.next_seed;
+        self.next_seed += 1;
+        let bots: [Option<Box<dyn Bot + Send>>; 2] = match opponent {
+            None => [None, None],
+            Some(spec) if played.is_multiple_of(2) => [None, Some(make_bot(spec, !seed))],
+            Some(spec) => [Some(make_bot(spec, !seed)), None],
+        };
+        TrainingGame::new(seed, bots)
+    }
+
+    fn observed<'py>(&self, py: Python<'py>) -> Observed<'py> {
+        let n = self.slots.len();
+        let mut obs = Vec::with_capacity(n * ENCODING_LEN * 4);
+        let mut masks = vec![0u8; n * DECK_SIZE];
+        let mut seats = Vec::with_capacity(n);
+        for (i, slot) in self.slots.iter().enumerate() {
+            let o = slot
+                .game
+                .observation()
+                .expect("every slot waits for a card");
+            for x in o.encode() {
+                obs.extend_from_slice(&x.to_le_bytes());
+            }
+            for card in o.legal_moves() {
+                masks[i * DECK_SIZE + usize::from(card.index())] = 1;
+            }
+            seats.push(o.player.index() as u8);
+        }
+        (
+            PyBytes::new(py, &obs),
+            PyBytes::new(py, &masks),
+            PyBytes::new(py, &seats),
+        )
+    }
+}
+
+#[pymethods]
+impl VecEnv {
+    /// One slot per opponent: `self` for self-play, or any bot name `play_duplicates` takes. Deals come from `seed`,
+    /// `seed + 1` and so on, in slot order and then in the order the games end.
+    #[new]
+    fn new(opponents: Vec<String>, seed: u64) -> PyResult<VecEnv> {
+        let specs = opponents
+            .iter()
+            .map(|name| match name.as_str() {
+                "self" => Ok(None),
+                name => parse_bot(name).map(Some),
+            })
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(PyValueError::new_err)?;
+        let mut env = VecEnv {
+            slots: Vec::new(),
+            next_seed: seed,
+        };
+        for opponent in specs {
+            let game = env.deal(opponent.as_ref(), 0);
+            env.slots.push(Slot {
+                opponent,
+                played: 0,
+                game,
+            });
+        }
+        Ok(env)
+    }
+
+    fn __len__(&self) -> usize {
+        self.slots.len()
+    }
+
+    /// The seed the next deal will use: with the first seed it names every deal played so far.
+    #[getter]
+    fn next_seed(&self) -> u64 {
+        self.next_seed
+    }
+
+    /// `(observations, masks, seats)`: `float32[n, 204]`, `uint8[n, 40]` and `uint8[n]`.
+    fn observe<'py>(&self, py: Python<'py>) -> Observed<'py> {
+        self.observed(py)
+    }
+
+    /// Plays one card per slot, given as card indices, and returns what `observe` does plus `done` (`uint8[n]`) and
+    /// `rewards` (`float32[n, 2]`, +1, 0 or −1 per seat for the game that just ended, 0 otherwise).
+    #[allow(clippy::type_complexity)]
+    fn step<'py>(
+        &mut self,
+        py: Python<'py>,
+        cards: Vec<u8>,
+    ) -> PyResult<(
+        Bound<'py, PyBytes>,
+        Bound<'py, PyBytes>,
+        Bound<'py, PyBytes>,
+        Bound<'py, PyBytes>,
+        Bound<'py, PyBytes>,
+    )> {
+        if cards.len() != self.slots.len() {
+            return Err(PyValueError::new_err(format!(
+                "{} cards for {} games",
+                cards.len(),
+                self.slots.len()
+            )));
+        }
+        let mut done = vec![0u8; self.slots.len()];
+        let mut rewards = Vec::with_capacity(self.slots.len() * 2 * 4);
+        for (i, &index) in cards.iter().enumerate() {
+            let card = Card::from_index(index)
+                .ok_or_else(|| PyValueError::new_err(format!("game {i}: no card {index}")))?;
+            self.slots[i]
+                .game
+                .play(card)
+                .map_err(|e| PyValueError::new_err(format!("game {i}: {e}")))?;
+            let mut reward = [0.0f32; 2];
+            if let Some(outcome) = self.slots[i].game.outcome() {
+                if let Outcome::Win(winner) = outcome {
+                    reward[winner.index()] = 1.0;
+                    reward[winner.next().index()] = -1.0;
+                }
+                done[i] = 1;
+                let played = self.slots[i].played + 1;
+                let opponent = self.slots[i].opponent.take();
+                let game = self.deal(opponent.as_ref(), played);
+                self.slots[i] = Slot {
+                    opponent,
+                    played,
+                    game,
+                };
+            }
+            for r in reward {
+                rewards.extend_from_slice(&r.to_le_bytes());
+            }
+        }
+        let (obs, masks, seats) = self.observed(py);
+        Ok((
+            obs,
+            masks,
+            seats,
+            PyBytes::new(py, &done),
+            PyBytes::new(py, &rewards),
+        ))
+    }
+}
+
 #[pymodule]
 fn briscolab_engine(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add_function(wrap_pyfunction!(bot_names, m)?)?;
     m.add_function(wrap_pyfunction!(play_duplicates, m)?)?;
+    m.add_class::<VecEnv>()?;
     Ok(())
 }

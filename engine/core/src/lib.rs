@@ -13,6 +13,7 @@ pub mod observation;
 pub mod player;
 pub mod rng;
 pub mod solver;
+pub mod training;
 pub mod trick;
 
 pub use bot::{
@@ -28,4 +29,5 @@ pub use observation::{Observation, ENCODING_LEN};
 pub use player::{Player, PLAYERS};
 pub use rng::Rng;
 pub use solver::{solve, solve_each};
+pub use training::TrainingGame;
 pub use trick::{trick_winner, Trick};

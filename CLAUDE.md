@@ -28,7 +28,8 @@ scaffold (static, bilingual, offline); it plays the four levels and holds the La
   (xoshiro256** seeded by SplitMix64, same numbers on every platform), `bot/` (`Bot::act` and `play_out` in
   `mod.rs`, one file per bot: `random.rs`, `greedy.rs`, `hard.rs`, `endgame.rs`, `pimc.rs`, `ismcts.rs`, `ppo.rs`, the network while the deck lasts and then the solver; `playout`
   in `mod.rs` is the search bots' rollout: Hard while the deck lasts, then the solver), `duplicate.rs`
-  (`play_duplicate`: one shuffle, seats swapped), `solver.rs` (`solve`: exact play once every card is known).
+  (`play_duplicate`: one shuffle, seats swapped), `solver.rs` (`solve`: exact play once every card is known), `training.rs` (`TrainingGame`: seats without a bot
+  wait for a card from outside while the deck lasts, then the solver plays for them).
 - `Game::determinise(obs, rng)` builds a full game consistent with an observation, dealing the cards the player
   cannot place at random; with the deck empty it is the real game. Search bots work on these, never on the real
   `Game`.
@@ -36,7 +37,9 @@ scaffold (static, bilingual, offline); it plays the four levels and holds the La
   `parse_bot` reads a bot's name once per batch (`pimc:<n>` sets PIMC's determinisations and `ismcts:<n>`
   ISMCTS's iterations, alone 100 and 1000; `ppo:<file>` reads a network's weights) and `make_bot` builds it per
   deal; a new bot goes there and in `BOT_NAMES`. `play_duplicates` plays a
-  batch of deals on every core with rayon, the only threads in the engine: `core` stays single-threaded.
+  batch of deals on every core with rayon, the only threads in the engine: `core` stays single-threaded. `VecEnv`
+  steps many `TrainingGame`s in one call for training and returns raw little-endian bytes; one slot per opponent,
+  `self` for self-play.
 - The bots explain their card next to `act`: `GreedyBot::choose` and `HardBot::choose` return the rule that fired,
   `EndgameBot::choose` that rule or every card's exact result (`solve_each`), and `IsmctsSearch` is ISMCTS in
   steps (`run`, `stats`, `hypotheses`, `best`), which `IsmctsBot::act` runs in one go with the same random numbers.
@@ -50,7 +53,7 @@ scaffold (static, bilingual, offline); it plays the four levels and holds the La
 - Tests: `tests/rules.rs` (hand-checked positions and a hand-traced full game), `tests/properties.rs` (invariants
   over thousands of seeded games, plus a recorded game that pins the generator), `tests/bots.rs` (the contract
   every bot honours, legal moves and reproducibility, plus each deterministic bot's choices; a new bot goes into
-  the list in `bots()` there), `tests/network.rs` (the encoding, the weights file, the forward pass and the network bot), `tests/search.rs` (determinisation shows the player exactly their observation; the
+  the list in `bots()` there), `tests/network.rs` (the encoding, the weights file, the forward pass and the network bot), `tests/training.rs` (when a waiting seat is asked), `tests/search.rs` (determinisation shows the player exactly their observation; the
   solver on a hand-traced endgame and its guarantee against any opponent; PIMC and ISMCTS play exactly once the
   deck is empty; ISMCTS in steps; a recorded ISMCTS game, which `web/src/engine/engine.test.ts` replays in
   WebAssembly).
@@ -70,6 +73,8 @@ cargo build -p briscolab-core --target wasm32-unknown-unknown
 
 - `lab/` is a uv project on Python 3.13 that depends on `engine/py` by path; `uv sync` rebuilds the binding when
   the Rust sources change. Dev tools: pytest, ruff (lint and format, 100 columns), pyright in strict mode.
+- `env.py` (`TrainingEnv`: `VecEnv` as numpy arrays). `experiments/env_speed.py` measures it: about 900 000
+  choices a second on one core of the M4, so the network, not the environment, bounds training.
 - `stats.py` (score per duplicate deal, 95% intervals, Bradley-Terry ratings), `arena.py` (`Config`, `run`, the
   report and the JSON results), `tracking.py` (one MLflow run per round robin, experiment `briscolab-arena`),
   `__main__.py` (the `briscolab-arena` command).
