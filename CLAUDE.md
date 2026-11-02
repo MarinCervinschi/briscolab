@@ -3,7 +3,7 @@
 A lab for two-player Briscola bots, with a site to play against them. Product and decisions: `SPEC.md`; the site's design: `DESIGN.md`.
 The rules the engine implements: `docs/rules.md`.
 
-**Status (2026-10-30): milestone 4, the site, tracked in epic #1 and its sub-issues.** The engine (`engine/core`), its Python binding (`engine/py`),
+**Status (2026-11-02): milestone 5, the RL bot, tracked in epic #13 and its sub-issues.** The engine (`engine/core`), its Python binding (`engine/py`),
 the arena (`lab/`, logging to MLflow) and the search bots exist; PIMC is the champion, ISMCTS ties it. `web/` has its
 scaffold (static, bilingual, offline); it plays the four levels and holds the Lab. It is deployed to
 `briscolab.cervinschi.site`.
@@ -12,7 +12,7 @@ scaffold (static, bilingual, offline); it plays the four levels and holds the La
 
 - `engine/` — Rust Cargo workspace: `core` (rules, bots), `py` (PyO3 binding for the lab), `wasm` (wasm-bindgen
   binding for the site).
-- `lab/` — Python with uv: arena, PettingZoo environment, PPO, MLflow logging.
+- `lab/` — Python with uv: arena, PPO over the vectorised environment in `engine/py`, MLflow logging.
 - `web/` — TanStack Start (Vite, React 19, TanStack Router) built as static files, pnpm, PWA; the Lab pages
   (results, bot articles) with Fumadocs under `/lab`. Same house style as TriviaMore and Zuppapp: tabs +
   semicolons (Prettier), `@/` for `src/`.

@@ -28,6 +28,14 @@ Decided on 2026-10-28 in an interview (decision 11 revised and 17 added the same
 | 15  | Cards            | Traditional **Neapolitan** designs from a freely licensed set: the Naples deck on Wikimedia Commons (public domain, by Trocche100), credited file by file. Our own backs, chosen in the settings (`DESIGN.md`)                                                                                                                                                                                                                                                                                   | Commercial decks (e.g. Modiano) are protected; Neapolitan cards are what most players expect                                                                   |
 | 16  | Languages        | Site in **Italian** by default and **English**, strings in message files from day one. Repo, docs and code in **English**                                                                                                                                                                                                                                                                                                           | The game is Italian, the research audience is not                                                                                                              |
 | 17  | Lab pages        | **Fumadocs UI** under `/lab` (Italian) and `/en/lab` (English): an article per bot on its strategy, one on the arena method, and result pages built from the arena's exported results (JSON in the repo, with seeds, config and engine version). Prerendered, with search; charts are our own SVG, rendered at build                                                                                                                | The research is the point of the project: its results need a page that outlives a notebook, one tap away from the game                                         |
+| 18  | RL bot           | **Hybrid** (2026-11-02): the network chooses the card while the deck lasts; once it is empty the exact solver plays, as in PIMC and ISMCTS. A pure network stays a possible later experiment | The last three tricks are already solved, so training spends nothing on them, and the comparison with PIMC, which also ends with the solver, is on equal terms |
+| 19  | Network runtime  | **A Rust bot in `core` reads the weights** (2026-11-02): PyTorch trains and exports the weights in a plain format; `py` and `wasm` read the file and hand the bytes to `core`, whose MLP forward pass is hand-written with no dependencies. A test checks Rust against PyTorch on the same inputs. ONNX stays only as an export logged to MLflow. Revises decisions 7 and 12 where they name ONNX | The arena stays one Rust arena with the bot chosen by name, and the site adds a few KB instead of 10–25 MB of onnxruntime-web |
+| 20  | Network input    | **`Observation::encode()` in `core`** (2026-11-02): 204 numbers. Five sets of 40 (hand, card on the table, cards played, the opponent's known cards, the face-up briscola), the two players' points over 120, the cards in the deck over 34, whether the player leads. The output is one of 40 cards, illegal ones masked. The order of the tricks and who took which card stay out | One encoding for training, arena and site, with nothing a player at the table does not know; the trick history would only model a style of opponent that keeps changing in self-play |
+| 21  | Reward           | **The result only** (2026-11-02): +1 for a win, −1 for a loss, 0 for a draw, at the end of the game after the solver. If training stalls, the first experiment is the result plus a small share of the point margin | It is what the arena measures, and with about 17 choices before the solver the signal is close enough to the choices that caused it |
+| 22  | Opponents        | **A pool** (2026-11-02): the current network in about half the games, its last 10 snapshots in about a third, Greedy and Hard in the rest; the network plays both seats. The shares are a starting point, recorded in each run's config. PIMC stays out of training, and PIMC at 10 determinisations joins only if the network stalls at Hard's level | Past snapshots keep it from forgetting how to beat older play, the rule bots show at once if it gets worse against simple play, and PIMC is too slow for millions of games |
+| 23  | Environment      | **A vectorised environment in `engine/py`** (2026-11-02): one object holds many games (for example 512); Python passes the network's cards for all of them in one call, and Rust plays them, moves Greedy or Hard where they are the opponent, ends each game with the solver and returns the encoded observations, masks and rewards in bulk. Its cards per second are measured before PPO is written. PettingZoo leaves this milestone. Revises decision 7 where it names PettingZoo | One call per card through Python costs more than the card itself, and PPO needs tens of millions of cards; nobody needs the PettingZoo interface yet |
+| 24  | Training runs    | **At night on the Mac, on all cores** (2026-11-02), CPU only, one run per night under `caffeinate` so the Mac does not sleep. An always-on home server was checked and left out: a CPU from 2014 without AVX2, slower in a whole day than the Mac in one night. Revises decision 10 where it names MPS | The Mac is free at night and much faster; a benchmark on two machines was more work than it saves |
+| 25  | Training budget  | **No fixed budget** (2026-11-02): start with runs, watch how the network learns, then decide how far to go from what turns out feasible and hard. During a run it plays 1000 duplicate deals against Hard and against PIMC at regular intervals, logged to MLflow | Nobody knows yet how long it needs; a cap set now would be a guess |
 
 ## Architecture
 
@@ -36,7 +44,7 @@ engine/      Cargo workspace
   core/      rules, state as bitsets (40 cards fit a u64), seeded RNG, observation, bots (search)
   wasm/      wasm-bindgen wrapper for the site
   py/        PyO3 module for the lab
-lab/         Python (uv): arena, PettingZoo env, PPO, MLflow logging, notebooks
+lab/         Python (uv): arena, PPO over the vectorised environment, MLflow logging, notebooks
 web/         TanStack Start, static: game UI, bot worker, PWA, Lab pages (Fumadocs)
 docs/        rules, and later the arena protocol and bot write-ups
 ```
@@ -51,9 +59,13 @@ The engine is the only place that knows the rules. The lab and the site never re
    as JSON for the Lab pages.
 3. **Search**: endgame solver, PIMC, ISMCTS, tuned in the arena. Done on 2026-10-30: PIMC is the champion, and
    ISMCTS at 1000 iterations ties it ([lab/results/ismcts.json](lab/results/ismcts.json)).
-4. **Site v1** (epic [#1](https://github.com/MarinCervinschi/briscolab/issues/1)): play the search bots at three or four difficulty levels, PWA, Umami events; the Lab pages with
+4. **Site v1** (epic [#1](https://github.com/MarinCervinschi/briscolab/issues/1), done on 2026-11-01): play the search bots at three or four difficulty levels, PWA, Umami events; the Lab pages with
    the arena results and an article per bot. Online.
-5. **RL (v1.1)**: PettingZoo env, PPO self-play, evaluation against the champion, ONNX export; on the site only if it wins.
+5. **RL (v1.1)** (epic [#13](https://github.com/MarinCervinschi/briscolab/issues/13)): the hybrid PPO bot of decisions 18 to 25. In order: `Observation::encode()` and the network
+   bot in `core`; the vectorised environment in `engine/py`, with its cards per second measured; PPO in self-play in
+   `lab/`, logged to MLflow; the arena. Done means: the arena has run 10 000 duplicate deals between the network
+   and PIMC, and the result is in `lab/results/` and in a Lab article, whether the network wins or not. It joins
+   the site only if its interval against PIMC is above 50%; first it has to beat Hard.
 
 ## Screens (site v1)
 
@@ -72,4 +84,11 @@ The engine is the only place that knows the rules. The lab and the site never re
 6. **Credits / privacy**: card attribution, the Umami note.
 
 ## Open questions
+
+- The result plus a small share of the point margin as the reward (decision 21): the first variant if training
+  stalls.
+- PIMC at 10 determinisations in the pool (decision 22): if the network stalls at Hard's level.
+- A pure network over all 20 tricks (decision 18): a later experiment for the Lab.
+- A PettingZoo interface over the environment (decision 23): only if the environment is published for others.
+- The network's size: two layers of 256 is the starting guess, tuned in the runs.
 
