@@ -69,12 +69,13 @@ The engine is the only place that knows the rules. The lab and the site never re
 
 ## Screens (site v1)
 
-1. **Home**: choose a level and start a game. Four levels, each one bot: Easy (Greedy), Medium (Hard), Hard
-   (Endgame), Expert (ISMCTS, which can stop at any iteration and so fits a time budget).
+1. **Home**: choose a level and start a game. Five levels, each one bot: Easy (Greedy), Medium (Hard), Hard
+   (Endgame), Expert (ISMCTS, which can stop at any iteration and so fits a time budget), Champion (PPO, the
+   network, added on 2026-11-03 once it beat PIMC in the arena).
 2. **Game**: the bot's hand face down, briscola under the deck, points at the end. On a phone, a portrait table
    with your three cards at the thumb, tap to play. On desktop, a wide table with the tricks taken and the cards
    played in view; click or press 1–3 to play. The bot thinks in view: for ISMCTS the hands it imagines for you
-   and a bar per card growing with the iterations, for Endgame each card's exact result, for Greedy and Hard the
+   and a bar per card growing with the iterations, for PPO the probability the network gives each card, for Endgame each card's exact result, for Greedy and Hard the
    rule that fired. Whatever would give away the bot's hand is blurred until the player reveals it; the point is
    to watch how the bot reasons, not to beat it at all costs.
 3. **Result**: score, a replay of the tricks with the bot's reasoning at every move.

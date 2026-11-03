@@ -73,7 +73,7 @@ describe("the engine in WebAssembly", () => {
 	});
 
 	it("lets every level's bot play a full game with its reasoning", () => {
-		for (const bot of ["greedy", "hard", "endgame", "ismcts:200"] as const) {
+		for (const bot of ["greedy", "hard", "endgame", "ismcts:200", "ppo"] as const) {
 			const session = new Session(11);
 			const reasonings = playOut(session, [bot, "hard"], [3, 4]);
 			expect(view(session).outcome).not.toBeNull();
@@ -81,7 +81,27 @@ describe("the engine in WebAssembly", () => {
 			if (bot === "ismcts:200")
 				expect([...kinds].sort()).toEqual(["exact", "rule", "search"]);
 			if (bot === "endgame") expect(kinds.has("exact")).toBe(true);
+			if (bot === "ppo")
+				expect([...kinds].sort()).toEqual(["exact", "network", "rule"]);
 		}
+	});
+
+	it("gives the network's legal cards probabilities that add up to 1, highest on the card it plays", () => {
+		const session = new Session(5);
+		session.seatBot(0, "ppo", 0);
+		session.think();
+		const reasoning = JSON.parse(session.reasoning()) as Extract<
+			Reasoning,
+			{ kind: "network" }
+		>;
+		const legal = view(session).hand.map(c => c.index);
+		expect(reasoning.cards.map(c => c.card.index)).toEqual(legal);
+		const total = reasoning.cards.reduce((sum, c) => sum + c.probability, 0);
+		expect(total).toBeCloseTo(1, 5);
+		const best = reasoning.cards.reduce((a, b) =>
+			b.probability > a.probability ? b : a
+		);
+		expect(session.playThought()).toBe(best.card.index);
 	});
 
 	it("reports ISMCTS visits that add up to its iterations", () => {

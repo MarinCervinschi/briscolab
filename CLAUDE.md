@@ -6,7 +6,7 @@ The rules the engine implements: `docs/rules.md`.
 **Status (2026-11-03): milestone 5, the RL bot, tracked in epic #13 and its sub-issues.** The engine (`engine/core`), its Python binding (`engine/py`),
 the arena (`lab/`, logging to MLflow), the search bots and the network bot exist; `ppo` is the champion (58.2% [57.5, 58.8]
 against PIMC over 10 000 duplicate deals, `lab/results/ppo.json`), and more PPO variants come before the epic closes. `web/` has its
-scaffold (static, bilingual, offline); it plays the four levels and holds the Lab. It is deployed to
+scaffold (static, bilingual, offline); it plays the five levels (the fifth is `ppo`) and holds the Lab. It is deployed to
 `briscolab.cervinschi.site`.
 
 ## Layout
@@ -127,7 +127,7 @@ MLFLOW_TRACKING_URI=<tracking uri> uv run briscolab-arena --deals 10000 --mlflow
   without a seed gets one in the URL.
 - `/watch?bots=<a>,<b>&seed=…` is two bots playing each other (`src/lib/game/watch.ts`, `WatchRunner`): the
   worker seats a bot in each seat and sends both seats' views, and the runner plays card after card with pause, one
-  card at a time and speed 1×, 2×, 4×. The bots are the four levels' (`WATCH_BOTS` in `src/lib/levels.ts`).
+  card at a time and speed 1×, 2×, 4×. The bots are the five levels' (`WATCH_BOTS` in `src/lib/levels.ts`).
 - Settings (`src/lib/settings.ts`, the `/settings` page): the card back, the theme and sound, in `localStorage` behind
   try/catch, so blocked storage only loses the choice. A script in the head sets `data-theme` before the first
   paint. `CardBack` draws the chosen back. Sounds (`src/lib/sound.ts`, files in `public/sounds`) play through the

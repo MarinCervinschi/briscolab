@@ -75,6 +75,10 @@ fn the_forward_pass_applies_relu_between_layers_only() {
     let (mut a, mut b) = (vec![0.0; network.width()], vec![0.0; network.width()]);
     // Hidden: relu(3 - 1) = 2 and relu(-3 + 1 + 0.5) = 0; output: 2·2 - 3·0 - 10, no ReLU.
     assert_eq!(network.forward(&[3.0, 1.0], &mut a, &mut b), [-6.0]);
+    assert_eq!(
+        network.activations(&[3.0, 1.0]),
+        [vec![2.0, 0.0], vec![-6.0]]
+    );
 }
 
 fn random_network(seed: u64) -> Network {
@@ -142,4 +146,17 @@ fn the_bot_plays_exactly_once_the_deck_is_empty() {
         let obs = game.observation(game.to_play().unwrap());
         assert_eq!(bot.act(&obs), EndgameBot::choose(&obs).0, "seed {seed}");
     }
+}
+
+#[test]
+fn the_last_activations_are_the_forward_pass() {
+    let network = random_network(9);
+    let input = Game::new(4).observation(Player::P0).encode();
+    let (mut a, mut b) = (vec![0.0; network.width()], vec![0.0; network.width()]);
+    let layers = network.activations(&input);
+    assert_eq!(
+        layers.iter().map(Vec::len).collect::<Vec<_>>(),
+        [16, 16, DECK_SIZE]
+    );
+    assert_eq!(layers[2], network.forward(&input, &mut a, &mut b));
 }

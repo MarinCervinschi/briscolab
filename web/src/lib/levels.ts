@@ -1,12 +1,13 @@
 import type { BotName } from "@/engine/types";
 import { m } from "@/paraglide/messages";
 
-// The four levels of SPEC.md, each one bot of the arena.
+// The five levels of SPEC.md, each one bot of the arena.
 export const LEVELS = [
 	{ id: "easy", name: m.level_easy, bot: "Greedy", engine: "greedy" },
 	{ id: "medium", name: m.level_medium, bot: "Hard", engine: "hard" },
 	{ id: "hard", name: m.level_hard, bot: "Endgame", engine: "endgame" },
 	{ id: "expert", name: m.level_expert, bot: "ISMCTS", engine: "ismcts" },
+	{ id: "champion", name: m.level_champion, bot: "PPO", engine: "ppo" },
 ] as const satisfies readonly {
 	id: string;
 	name: () => string;
@@ -20,7 +21,7 @@ export function parseLevel(value: unknown): LevelId {
 	return LEVELS.find(level => level.id === value)?.id ?? "easy";
 }
 
-/** The bots that can be watched against each other: the four levels' bots. */
+/** The bots that can be watched against each other: the five levels' bots. */
 export const WATCH_BOTS = LEVELS.map(level => ({
 	engine: level.engine,
 	name: level.bot,

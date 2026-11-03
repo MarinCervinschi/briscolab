@@ -5,6 +5,7 @@ import { parseLevel } from "./levels";
 describe("parseLevel", () => {
 	it("keeps a known level", () => {
 		expect(parseLevel("expert")).toBe("expert");
+		expect(parseLevel("champion")).toBe("champion");
 	});
 
 	it("falls back to the easy level for anything else", () => {

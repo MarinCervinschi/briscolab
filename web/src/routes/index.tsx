@@ -20,9 +20,9 @@ function Home() {
 				</h1>
 				<p className="max-w-2xl text-lg leading-relaxed">{m.home_lead()}</p>
 			</section>
-			<ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+			<ul className="grid grid-cols-2 gap-3 sm:grid-cols-5">
 				{LEVELS.map(level => (
-					<li key={level.id}>
+					<li key={level.id} className="last:col-span-2 sm:last:col-span-1">
 						<Link
 							to="/play"
 							search={{ level: level.id, seed: undefined }}

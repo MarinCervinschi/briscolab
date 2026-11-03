@@ -86,6 +86,8 @@ function Game({
 		reducedMotion() ? "play" : "shuffle"
 	);
 	const [revealed, setRevealed] = useState(false);
+	// Whether the player looked at the bot's cards at least once, for the event at the end.
+	const [looked, setLooked] = useState(false);
 	const [sheetOpen, setSheetOpen] = useState(false);
 	const [leaving, setLeaving] = useState(false);
 	const view = state?.view;
@@ -130,7 +132,7 @@ function Game({
 			level: level.id,
 			winner: winner === 0 ? "player" : winner === BOT ? "bot" : "draw",
 			margin: view.points[0] - view.points[BOT],
-			revealed,
+			revealed: looked,
 		});
 		// Sent once, when the game is over; later changes to the page are not part of it.
 	}, [over]);
@@ -160,7 +162,10 @@ function Game({
 		<ReasoningView
 			reasoning={state.reasoning}
 			revealed={revealed}
-			onReveal={() => setRevealed(true)}
+			onToggle={() => {
+				setRevealed(r => !r);
+				setLooked(true);
+			}}
 		/>
 	);
 

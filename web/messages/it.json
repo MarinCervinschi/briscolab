@@ -216,5 +216,22 @@
 	"rules_tip_2": "Non usare una briscola per prendere due lisci: tienila per i carichi.",
 	"rules_tip_3": "Conta le briscole uscite. Sapere dov'è l'Asso di briscola cambia la partita.",
 	"rules_play": "Gioca contro Facile",
-	"rules_watch": "Guarda due bot"
+	"rules_watch": "Guarda due bot",
+	"level_champion": "Campione",
+	"reasoning_network_cards": "La probabilità di ogni carta",
+	"reasoning_probability": "{percent}%",
+	"result_network": "La rete era sicura al {percent}%",
+	"network_inputs": "Cosa vede",
+	"network_neurons": "Neuroni",
+	"network_cards": "Carte",
+	"network_caption": "Gioca la carta più probabile. Neuroni: i {shown} più attivi su {width} per strato.",
+	"network_input_hand": "Mano",
+	"network_input_table": "Tavolo",
+	"network_input_played": "Uscite",
+	"network_input_known": "Carta nota",
+	"network_input_briscola": "Briscola",
+	"network_input_points": "Suoi punti",
+	"network_input_opponent_points": "Punti avversari",
+	"network_input_deck": "Mazzo",
+	"network_input_leads": "Apre"
 }

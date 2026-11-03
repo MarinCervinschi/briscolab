@@ -4,7 +4,7 @@ description: Come ragionano i bot di Briscolab e quanto è forte ognuno, misurat
 ---
 
 Briscolab mette a confronto bot che giocano a briscola in due, dal più semplice, che gioca a caso, a due bot di
-ricerca che simulano migliaia di partite prima di ogni carta. Ogni bot vede solo quello che vedrebbe un giocatore al
+ricerca che simulano migliaia di partite prima di ogni carta e a una rete neurale allenata giocando contro se stessa. Ogni bot vede solo quello che vedrebbe un giocatore al
 tavolo: la sua mano, le carte giocate, la briscola, quante carte restano nel mazzo.
 
 Un bot diventa campione solo nell'arena: tutti contro tutti, 10 000 smazzate duplicate per coppia, e un vantaggio
@@ -12,24 +12,25 @@ conta solo quando il suo intervallo al 95% non comprende il 50%. [Come funziona 
 
 ## La classifica
 
-Dall'ultimo run pubblicato, [«ismcts»](/lab/runs/ismcts), con sei bot.
+Dall'ultimo run pubblicato, [«ppo»](/lab/runs/ppo), con sette bot.
 
-<Ratings run="ismcts" />
+<Ratings run="ppo" />
 
-<VersusChampion run="ismcts" />
+<VersusChampion run="ppo" />
 
-PIMC e ISMCTS sono alla pari: 49,9% ± 0,7 per PIMC su 10 000 smazzate duplicate. PIMC resta il campione perché è
-arrivato prima, e ISMCTS non l'ha battuto.
+La rete PPO è il campione: 58,2% [57,5, 58,8] contro PIMC e 58,3% [57,7, 59,0] contro ISMCTS, su 10 000 smazzate
+duplicate per coppia. PIMC e ISMCTS restano alla pari tra loro: 49,9% per PIMC.
 
 ## I bot
 
-| Bot                     | Livello sul sito | Come sceglie la carta                            |
-| ----------------------- | ---------------- | ------------------------------------------------ |
-| [Random](/lab/random)   | —                | A caso tra le carte giocabili                    |
-| [Greedy](/lab/greedy)   | Facile           | Vince la presa corrente quando gli conviene      |
-| [Hard](/lab/hard)       | Medio            | Sette regole da giocatore esperto                |
-| [Endgame](/lab/endgame) | Difficile        | Hard finché c'è il mazzo, poi il calcolo esatto  |
-| [PIMC](/lab/pimc)       | —                | Prova ogni carta su 100 smazzate immaginate      |
-| [ISMCTS](/lab/ismcts)   | Esperto          | Un albero di ricerca su 1000 smazzate immaginate |
+| Bot                     | Livello sul sito | Come sceglie la carta                                       |
+| ----------------------- | ---------------- | ----------------------------------------------------------- |
+| [Random](/lab/random)   | —                | A caso tra le carte giocabili                               |
+| [Greedy](/lab/greedy)   | Facile           | Vince la presa corrente quando gli conviene                 |
+| [Hard](/lab/hard)       | Medio            | Sette regole da giocatore esperto                           |
+| [Endgame](/lab/endgame) | Difficile        | Hard finché c'è il mazzo, poi il calcolo esatto             |
+| [PIMC](/lab/pimc)       | —                | Prova ogni carta su 100 smazzate immaginate                 |
+| [ISMCTS](/lab/ismcts)   | Esperto          | Un albero di ricerca su 1000 smazzate immaginate            |
+| PPO                     | Campione         | Una rete neurale finché c'è il mazzo, poi il calcolo esatto |
 
 Tutti i run pubblicati sono nel menu, sotto «Run dell'arena».

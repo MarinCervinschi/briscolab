@@ -3,12 +3,18 @@
 
 use briscolab_core::{
     Bot, Card, CardSet, EndgameBot, EndgameReason, Game, GreedyBot, GreedyRule, HardBot, HardRule,
-    IsmctsSearch, Outcome, Player, RandomBot, Rng, Trick, PLAYERS,
+    IsmctsSearch, Network, Observation, Outcome, Player, PpoBot, RandomBot, Rng, Trick, DECK_SIZE,
+    HAND_SIZE, PLAYERS,
 };
 use serde_json::{json, Value};
+use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
 const ISMCTS_ITERATIONS: usize = 1000;
+// The champion network, as `ppo` in engine/py.
+const PPO_WEIGHTS: &[u8] = include_bytes!("../../../lab/models/ppo.brnn");
+// How many neurons of each hidden layer the reasoning shows: the most active on this move.
+const SHOWN_NEURONS: usize = 10;
 
 /// One game: the full state stays here, and JavaScript only reads what a seat can see. Each seat may have a bot,
 /// kept for the whole game as in the arena, so a seeded game plays the same cards here as in the engine's tests.
@@ -27,6 +33,7 @@ enum SeatBot {
     Hard,
     Endgame,
     Ismcts { iterations: usize, rng: Rng },
+    Ppo { bot: PpoBot, network: Arc<Network> },
 }
 
 /// The card being chosen: decided at once, or an ISMCTS search that runs in steps.
@@ -47,7 +54,7 @@ impl Session {
         }
     }
 
-    /// Seats a bot: `random`, `greedy`, `hard`, `endgame`, `ismcts` (1000 iterations) or `ismcts:<n>`.
+    /// Seats a bot: `random`, `greedy`, `hard`, `endgame`, `ismcts` (1000 iterations), `ismcts:<n>` or `ppo`.
     #[wasm_bindgen(js_name = seatBot)]
     pub fn seat_bot(&mut self, seat: u8, bot: &str, seed: u32) -> Result<(), JsError> {
         let player = seat_player(seat)?;
@@ -123,14 +130,20 @@ impl Session {
                     json!({ "kind": "rule", "bot": "hard", "rule": hard_rule(rule) }),
                 ))
             }
-            // With the deck empty ISMCTS plays exactly, as Endgame does.
-            SeatBot::Endgame | SeatBot::Ismcts { .. } if obs.deck_len == 0 => {
+            // With the deck empty ISMCTS and the network play exactly, as Endgame does.
+            SeatBot::Endgame | SeatBot::Ismcts { .. } | SeatBot::Ppo { .. }
+                if obs.deck_len == 0 =>
+            {
                 let (card, reason) = EndgameBot::choose(&obs);
                 chosen((card, endgame_reasoning(&reason)))
             }
             SeatBot::Endgame => {
                 let (card, reason) = EndgameBot::choose(&obs);
                 chosen((card, endgame_reasoning(&reason)))
+            }
+            SeatBot::Ppo { bot, network } => {
+                let card = bot.act(&obs);
+                chosen((card, network_reasoning(&obs, network)))
             }
             SeatBot::Ismcts { iterations, rng } => Thinking::Search {
                 search: IsmctsSearch::new(obs, rng.clone()),
@@ -216,6 +229,14 @@ fn make_bot(bot: &str, seed: u64) -> Result<SeatBot, JsError> {
             iterations: ISMCTS_ITERATIONS,
             rng: Rng::new(seed),
         }),
+        "ppo" => {
+            let network =
+                Arc::new(Network::from_bytes(PPO_WEIGHTS).expect("the built-in network is valid"));
+            Ok(SeatBot::Ppo {
+                bot: PpoBot::new(network.clone()).expect("the built-in network fits the bot"),
+                network,
+            })
+        }
         _ => Err(JsError::new(&format!("unknown bot {bot:?}"))),
     }
 }
@@ -283,6 +304,58 @@ fn endgame_reasoning(reason: &EndgameReason) -> Value {
                 .collect::<Vec<_>>(),
         }),
     }
+}
+
+/// The probability the network gives each legal card, a softmax of its scores over those cards as in training, and
+/// a few of its numbers on the way: what goes in, grouped as `Observation::encode` lays it out, and the most active
+/// neurons of each hidden layer in index order, scaled to the largest.
+fn network_reasoning(obs: &Observation, network: &Network) -> Value {
+    let input = obs.encode();
+    let layers = network.activations(&input);
+    let scores = layers.last().expect("a network has a layer");
+    let moves = obs.legal_moves();
+    let score = |c: Card| scores[usize::from(c.index())];
+    let top = moves.iter().map(score).fold(f32::MIN, f32::max);
+    let total: f32 = moves.iter().map(|c| (score(c) - top).exp()).sum();
+
+    let sets = [HAND_SIZE, 1, DECK_SIZE, 1, 1]
+        .iter()
+        .enumerate()
+        .map(|(n, &capacity)| {
+            let marked: f32 = input[n * DECK_SIZE..(n + 1) * DECK_SIZE].iter().sum();
+            (marked / capacity as f32).min(1.0)
+        });
+    let inputs: Vec<f32> = sets.chain(input[5 * DECK_SIZE..].iter().copied()).collect();
+    let hidden: Vec<Vec<f32>> = layers[..layers.len() - 1]
+        .iter()
+        .map(|layer| {
+            let mut order: Vec<usize> = (0..layer.len()).collect();
+            order.sort_by(|&a, &b| layer[b].total_cmp(&layer[a]).then(a.cmp(&b)));
+            let mut shown = order[..SHOWN_NEURONS.min(layer.len())].to_vec();
+            shown.sort_unstable();
+            let largest = layer[order[0]];
+            shown
+                .iter()
+                .map(|&i| {
+                    if largest > 0.0 {
+                        layer[i] / largest
+                    } else {
+                        0.0
+                    }
+                })
+                .collect()
+        })
+        .collect();
+    json!({
+        "kind": "network",
+        "cards": moves
+            .iter()
+            .map(|c| json!({ "card": card(c), "probability": (score(c) - top).exp() / total }))
+            .collect::<Vec<_>>(),
+        "inputs": inputs,
+        "hidden": hidden,
+        "width": layers[0].len(),
+    })
 }
 
 fn search_reasoning(search: &IsmctsSearch, budget: usize) -> Value {

@@ -168,7 +168,7 @@ function Game({
 			<ReasoningView
 				reasoning={state.reasoning[shownSeat]}
 				revealed={revealed}
-				onReveal={() => setRevealed(true)}
+				onToggle={() => setRevealed(r => !r)}
 				opponent={names[1 - shownSeat]}
 			/>
 		</div>

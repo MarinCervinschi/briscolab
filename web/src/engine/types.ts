@@ -58,8 +58,19 @@ export type Reasoning =
 			budget: number;
 			cards: { card: Card; visits: number; expectedPoints: number }[];
 			hypotheses: { iteration: number; hand: Card[]; points: number }[];
+	  }
+	| {
+			kind: "network";
+			cards: { card: Card; probability: number }[];
+			/** What goes in, 0 to 1: the hand, the table, the cards played, the known card, the briscola, its points,
+			 * the opponent's points, the deck and whether it leads. */
+			inputs: number[];
+			/** The most active neurons of each hidden layer, in index order, 0 to 1 against the largest. */
+			hidden: number[][];
+			/** How many neurons a hidden layer has. */
+			width: number;
 	  };
 
 /** The bots the engine knows by name; `ismcts:<n>` sets the iterations. */
 export type BotName =
-	"random" | "greedy" | "hard" | "endgame" | "ismcts" | `ismcts:${number}`;
+	"random" | "greedy" | "hard" | "endgame" | "ismcts" | `ismcts:${number}` | "ppo";

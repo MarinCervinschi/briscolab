@@ -12,6 +12,7 @@ const BOTS = {
 	hard: { seed: "hard-1", colour: "6fb7df" },
 	endgame: { seed: "endgame-1", colour: "0297de" },
 	ismcts: { seed: "ismcts-1", colour: "f2f6f8" },
+	ppo: { seed: "ppo-1", colour: "c24a26" },
 };
 
 for (const [bot, { seed, colour }] of Object.entries(BOTS))

@@ -216,5 +216,22 @@
 	"rules_tip_2": "Don't spend a briscola on two lisci: keep it for the carichi.",
 	"rules_tip_3": "Count the briscole played. Knowing where the Ace of briscola is changes the game.",
 	"rules_play": "Play against Easy",
-	"rules_watch": "Watch two bots"
+	"rules_watch": "Watch two bots",
+	"level_champion": "Champion",
+	"reasoning_network_cards": "The probability of each card",
+	"reasoning_probability": "{percent}%",
+	"result_network": "The network was {percent}% sure",
+	"network_inputs": "What it sees",
+	"network_neurons": "Neurons",
+	"network_cards": "Cards",
+	"network_caption": "It plays the most likely card. Neurons: the {shown} most active of {width} per layer.",
+	"network_input_hand": "Hand",
+	"network_input_table": "Table",
+	"network_input_played": "Played",
+	"network_input_known": "Known card",
+	"network_input_briscola": "Briscola",
+	"network_input_points": "Its points",
+	"network_input_opponent_points": "Opponent's points",
+	"network_input_deck": "Deck",
+	"network_input_leads": "Leads"
 }

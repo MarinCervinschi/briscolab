@@ -20,6 +20,8 @@ COPY web/package.json web/pnpm-lock.yaml web/
 RUN cd web && pnpm install --frozen-lockfile
 COPY engine engine
 COPY lab/results lab/results
+# The champion network, built into the engine for the site.
+COPY lab/models lab/models
 COPY web web
 # Umami's script and site, given by the deploy; without them the site sends no analytics.
 ARG VITE_UMAMI_SCRIPT_URL

@@ -215,4 +215,27 @@ impl Network {
         }
         &from[..self.outputs()]
     }
+
+    /// Every layer's outputs for `input`, the hidden ones after their ReLU. It allocates: it is for showing the
+    /// network at work, not for playing.
+    pub fn activations(&self, input: &[f32]) -> Vec<Vec<f32>> {
+        let mut outputs: Vec<Vec<f32>> = Vec::with_capacity(self.layers.len());
+        for (i, layer) in self.layers.iter().enumerate() {
+            let from = outputs.last().map_or(input, Vec::as_slice);
+            let rows = layer.weights.chunks_exact(layer.inputs);
+            let out = rows
+                .zip(&layer.biases)
+                .map(|(row, bias)| {
+                    let sum = row.iter().zip(from).fold(*bias, |sum, (w, x)| sum + w * x);
+                    if i + 1 < self.layers.len() {
+                        sum.max(0.0)
+                    } else {
+                        sum
+                    }
+                })
+                .collect();
+            outputs.push(out);
+        }
+        outputs
+    }
 }

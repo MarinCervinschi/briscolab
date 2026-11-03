@@ -20,6 +20,13 @@ export function mostVisited(reasoning: Extract<Reasoning, { kind: "search" }>) {
 	);
 }
 
+/** The card the network plays: the most likely, as the engine picks. */
+export function mostLikely(reasoning: Extract<Reasoning, { kind: "network" }>) {
+	return reasoning.cards.reduce((best, c) =>
+		c.probability > best.probability ? c : best
+	);
+}
+
 /** The sentence for a rule-based choice. */
 export function ruleSentence(reasoning: Extract<Reasoning, { kind: "rule" }>): string {
 	const sentences = {

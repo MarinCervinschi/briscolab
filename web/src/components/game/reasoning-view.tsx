@@ -1,24 +1,26 @@
 import type { Reasoning } from "@/engine/types";
 import { cardName } from "@/lib/cards";
 import { cn } from "@/lib/cn";
-import { forecast, mostVisited, ruleSentence } from "@/lib/game/reasoning";
+import { forecast, mostLikely, mostVisited, ruleSentence } from "@/lib/game/reasoning";
 import { m } from "@/paraglide/messages";
 
 import { CardFace } from "./card";
+import { NetworkView } from "./network-view";
 
 /**
  * What the bot is thinking or thought (DESIGN.md, "The bot's reasoning"). The parts that show the bot's own
- * cards are blurred until `revealed`.
+ * cards are blurred unless `revealed`; `onToggle` shows and hides them.
  */
 export function ReasoningView({
 	reasoning,
 	revealed,
-	onReveal,
+	onToggle,
 	opponent,
 }: {
 	reasoning: Reasoning | null;
 	revealed: boolean;
-	onReveal: () => void;
+	/** Absent where the cards are always shown, as in the replay. */
+	onToggle?: () => void;
 	/** Whose cards the bot imagines, when it is not the person watching: another bot. */
 	opponent?: string;
 }) {
@@ -32,37 +34,55 @@ export function ReasoningView({
 	const pick =
 		reasoning.kind === "search"
 			? mostVisited(reasoning)?.card.index
-			: reasoning.results.reduce((a, b) => (b.points > a.points ? b : a)).card.index;
+			: reasoning.kind === "network"
+				? mostLikely(reasoning).card.index
+				: reasoning.results.reduce((a, b) => (b.points > a.points ? b : a)).card.index;
+	// Each row's figure and the share of its bar: points of 120, or the network's probability.
 	const rows =
 		reasoning.kind === "search"
 			? reasoning.cards.map(c => ({
 					card: c.card,
-					points: c.expectedPoints,
-					detail: m.reasoning_visits({ visits: c.visits }),
+					figure: `${m.reasoning_points({ points: Math.round(c.expectedPoints) })} · ${m.reasoning_visits({ visits: c.visits })}`,
+					share: c.expectedPoints / 120,
 				}))
-			: reasoning.results.map(r => ({ card: r.card, points: r.points, detail: "" }));
+			: reasoning.kind === "network"
+				? reasoning.cards.map(c => ({
+						card: c.card,
+						figure: m.reasoning_probability({
+							percent: Math.round(c.probability * 100),
+						}),
+						share: c.probability,
+					}))
+				: reasoning.results.map(r => ({
+						card: r.card,
+						figure: m.reasoning_points({ points: Math.round(r.points) }),
+						share: r.points / 120,
+					}));
 
 	return (
 		<div className="flex flex-col gap-7">
-			<div className="grid grid-cols-2 gap-4">
-				{expected !== null && (
-					<Figure
-						value={Math.round(expected)}
-						caption={m.reasoning_forecast()}
-						className="text-data"
-					/>
-				)}
-				{reasoning.kind === "search" && (
-					<Figure
-						value={reasoning.iterations}
-						caption={m.reasoning_iterations({ total: reasoning.budget })}
-					/>
-				)}
-			</div>
+			{reasoning.kind !== "network" && (
+				<div className="grid grid-cols-2 gap-4">
+					{expected !== null && (
+						<Figure
+							value={Math.round(expected)}
+							caption={m.reasoning_forecast()}
+							className="text-data"
+						/>
+					)}
+					{reasoning.kind === "search" && (
+						<Figure
+							value={reasoning.iterations}
+							caption={m.reasoning_iterations({ total: reasoning.budget })}
+						/>
+					)}
+				</div>
+			)}
 
 			{reasoning.kind === "exact" && (
 				<p className="text-text-soft leading-relaxed">{m.reasoning_exact()}</p>
 			)}
+			{reasoning.kind === "network" && <NetworkView reasoning={reasoning} />}
 
 			{reasoning.kind === "search" && reasoning.hypotheses.length > 0 && (
 				<section className="flex flex-col gap-2">
@@ -98,11 +118,24 @@ export function ReasoningView({
 			)}
 
 			<section className="relative flex flex-col gap-3">
-				<h3 className="text-[15px] font-semibold">
-					{reasoning.kind === "search"
-						? m.reasoning_cards()
-						: m.reasoning_exact_cards()}
-				</h3>
+				<div className="flex items-center justify-between gap-3">
+					<h3 className="text-[15px] font-semibold">
+						{reasoning.kind === "search"
+							? m.reasoning_cards()
+							: reasoning.kind === "network"
+								? m.reasoning_network_cards()
+								: m.reasoning_exact_cards()}
+					</h3>
+					{revealed && onToggle && (
+						<button
+							type="button"
+							onClick={onToggle}
+							className="text-text-soft hover:text-text -my-2 h-10 shrink-0 text-sm underline-offset-4 hover:underline"
+						>
+							{m.reasoning_hide()}
+						</button>
+					)}
+				</div>
 				<ul
 					aria-hidden={!revealed}
 					className={cn(
@@ -122,10 +155,7 @@ export function ReasoningView({
 										{cardName(row.card)}
 										{row.card.index === pick && ` · ${m.reasoning_picks()}`}
 									</span>
-									<span className="text-text-soft font-mono text-sm">
-										{m.reasoning_points({ points: Math.round(row.points) })}
-										{row.detail && ` · ${row.detail}`}
-									</span>
+									<span className="text-text-soft font-mono text-sm">{row.figure}</span>
 								</div>
 								<div className="bg-raised relative h-2 rounded-full">
 									<div
@@ -133,22 +163,24 @@ export function ReasoningView({
 											"bg-data absolute inset-y-0 left-0 rounded-full",
 											row.card.index !== pick && "opacity-55"
 										)}
-										style={{ width: `${(row.points / 120) * 100}%` }}
+										style={{ width: `${row.share * 100}%` }}
 									/>
-									<div
-										className="bg-signal absolute -top-1 h-4 w-0.5"
-										style={{ left: `${(61 / 120) * 100}%` }}
-									/>
+									{reasoning.kind !== "network" && (
+										<div
+											className="bg-signal absolute -top-1 h-4 w-0.5"
+											style={{ left: `${(61 / 120) * 100}%` }}
+										/>
+									)}
 								</div>
 							</div>
 						</li>
 					))}
 				</ul>
-				{!revealed && (
+				{!revealed && onToggle && (
 					<div className="absolute inset-x-0 top-9 bottom-0 flex items-center justify-center">
 						<button
 							type="button"
-							onClick={onReveal}
+							onClick={onToggle}
 							className="bg-text text-ground h-10 rounded-full px-5 text-[15px] font-semibold transition-transform active:scale-95"
 						>
 							{m.reasoning_reveal()}

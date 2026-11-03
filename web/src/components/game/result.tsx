@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 import type { Reasoning, View } from "@/engine/types";
 import { cardName } from "@/lib/cards";
 import { cn } from "@/lib/cn";
-import { forecast, ruleSentence } from "@/lib/game/reasoning";
+import { forecast, mostLikely, ruleSentence } from "@/lib/game/reasoning";
 import { BOT, type BotMove } from "@/lib/game/runner";
 import { m } from "@/paraglide/messages";
 
@@ -205,7 +205,6 @@ export function Result({
 													<ReasoningView
 														reasoning={move.reasoning}
 														revealed
-														onReveal={() => {}}
 														opponent={
 															names && move.seat !== undefined
 																? names[1 - move.seat]
@@ -322,6 +321,10 @@ function Trophy({ view, winner }: { view: View; winner: number }) {
 function summary(reasoning: Reasoning): string {
 	if (reasoning.kind === "rule") return ruleSentence(reasoning);
 	if (reasoning.kind === "random") return m.reasoning_random();
+	if (reasoning.kind === "network")
+		return m.result_network({
+			percent: Math.round(mostLikely(reasoning).probability * 100),
+		});
 	const points = Math.round(forecast(reasoning) ?? 0);
 	return reasoning.kind === "exact"
 		? m.result_exact({ points })
