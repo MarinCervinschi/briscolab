@@ -3,8 +3,9 @@
 A lab for two-player Briscola bots, with a site to play against them. Product and decisions: `SPEC.md`; the site's design: `DESIGN.md`.
 The rules the engine implements: `docs/rules.md`.
 
-**Status (2026-11-02): milestone 5, the RL bot, tracked in epic #13 and its sub-issues.** The engine (`engine/core`), its Python binding (`engine/py`),
-the arena (`lab/`, logging to MLflow) and the search bots exist; PIMC is the champion, ISMCTS ties it. `web/` has its
+**Status (2026-11-03): milestone 5, the RL bot, tracked in epic #13 and its sub-issues.** The engine (`engine/core`), its Python binding (`engine/py`),
+the arena (`lab/`, logging to MLflow), the search bots and the network bot exist; `ppo` is the champion (58.2% [57.5, 58.8]
+against PIMC over 10 000 duplicate deals, `lab/results/ppo.json`), and more PPO variants come before the epic closes. `web/` has its
 scaffold (static, bilingual, offline); it plays the four levels and holds the Lab. It is deployed to
 `briscolab.cervinschi.site`.
 
