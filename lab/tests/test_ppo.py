@@ -44,6 +44,18 @@ def test_the_pool_fills_its_shares_of_the_games(tmp_path: Path) -> None:
     assert opponents[-2:] == ["greedy", "hard"]
 
 
+def test_the_pool_keeps_only_its_last_snapshots_on_disk(tmp_path: Path) -> None:
+    pool = Pool(Config(snapshots=3), tmp_path)
+    agent = Agent(hidden=8, layers=1)
+    for update in range(1, 6):
+        pool.add(agent, update)
+    assert sorted(p.name for p in (tmp_path / "snapshots").iterdir()) == [
+        "update-3.brnn",
+        "update-4.brnn",
+        "update-5.brnn",
+    ]
+
+
 def test_a_short_run_leaves_weights_the_engine_plays(tmp_path: Path) -> None:
     config = Config(
         games=16,

@@ -155,7 +155,11 @@ class Pool:
     def add(self, agent: Agent, update: int) -> None:
         path = self.dir / f"update-{update}.brnn"
         path.write_bytes(weights_bytes(agent))
-        self.files = [*self.files, path][-self.config.snapshots :]
+        self.files = [*self.files, path]
+        # Only the last few play in the pool; the older ones would fill the disk over a night.
+        for old in self.files[: -self.config.snapshots]:
+            old.unlink()
+        self.files = self.files[-self.config.snapshots :]
 
     def opponents(self) -> list[str]:
         c = self.config
