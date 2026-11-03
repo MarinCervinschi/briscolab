@@ -11,7 +11,11 @@ use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 use rayon::prelude::*;
 
-const BOT_NAMES: [&str; 6] = ["random", "greedy", "hard", "endgame", "pimc", "ismcts"];
+const BOT_NAMES: [&str; 7] = [
+    "random", "greedy", "hard", "endgame", "pimc", "ismcts", "ppo",
+];
+/// The champion network: the best weights of the run night-1, chosen by the arena (lab/results/ppo.json).
+const PPO_WEIGHTS: &[u8] = include_bytes!("../../../lab/models/ppo.brnn");
 const PIMC_DETERMINISATIONS: usize = 100;
 const ISMCTS_ITERATIONS: usize = 1000;
 
@@ -27,7 +31,8 @@ enum BotSpec {
 }
 
 /// A bot by name. `pimc:<n>` is PIMC with `n` determinisations and `ismcts:<n>` is ISMCTS with `n` iterations;
-/// `pimc` alone has 100, `ismcts` alone 1000. `ppo:<file>` plays the network whose weights are in `file`.
+/// `pimc` alone has 100, `ismcts` alone 1000. `ppo` is the champion network, `ppo:<file>` the network whose weights
+/// are in `file`.
 fn parse_bot(name: &str) -> Result<BotSpec, String> {
     if let Some(path) = name.strip_prefix("ppo:") {
         let bytes = std::fs::read(path).map_err(|e| format!("bad bot {name:?}: {e}"))?;
@@ -57,6 +62,9 @@ fn parse_bot(name: &str) -> Result<BotSpec, String> {
         "endgame" => Ok(BotSpec::Endgame),
         "pimc" => Ok(BotSpec::Pimc(PIMC_DETERMINISATIONS)),
         "ismcts" => Ok(BotSpec::Ismcts(ISMCTS_ITERATIONS)),
+        "ppo" => Network::from_bytes(PPO_WEIGHTS)
+            .map(|network| BotSpec::Ppo(Arc::new(network)))
+            .map_err(|e| format!("the champion's weights: {e}")),
         _ => Err(format!(
             "unknown bot {name:?}, expected one of {BOT_NAMES:?}, pimc:<n>, ismcts:<n> or ppo:<file>"
         )),

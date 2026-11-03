@@ -20,6 +20,7 @@ const NAMES: Record<string, string> = {
 	endgame: "Endgame",
 	pimc: "PIMC",
 	ismcts: "ISMCTS",
+	ppo: "PPO",
 };
 
 export const botName = (bot: string) => NAMES[bot] ?? bot;

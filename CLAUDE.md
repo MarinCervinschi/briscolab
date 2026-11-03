@@ -35,7 +35,8 @@ scaffold (static, bilingual, offline); it plays the four levels and holds the La
   `Game`.
 - `engine/py` (crate `briscolab-py`, Python module `briscolab_engine`, built by maturin): translation only.
   `parse_bot` reads a bot's name once per batch (`pimc:<n>` sets PIMC's determinisations and `ismcts:<n>`
-  ISMCTS's iterations, alone 100 and 1000; `ppo:<file>` reads a network's weights) and `make_bot` builds it per
+  ISMCTS's iterations, alone 100 and 1000; `ppo` is the champion network, `lab/models/ppo.brnn`, built into the binding, and `ppo:<file>` reads any
+  network's weights) and `make_bot` builds it per
   deal; a new bot goes there and in `BOT_NAMES`. `play_duplicates` plays a
   batch of deals on every core with rayon, the only threads in the engine: `core` stays single-threaded. `VecEnv`
   steps many `TrainingGame`s in one call for training and returns raw little-endian bytes; one slot per opponent,
@@ -78,7 +79,8 @@ cargo build -p briscolab-core --target wasm32-unknown-unknown
 - `ppo.py` (the `briscolab-ppo` command): PPO in self-play, CleanRL-style in one file. It trains on whole games
   against the pool of `Config` (self-play, the last snapshots as `ppo:<file>`, Greedy and Hard), scores the network
   against Hard and, less often, PIMC on deals from seed 1 000 000, and writes `config.json`, `current.brnn`,
-  `best.brnn` and `snapshots/` under `runs/<name>` (ignored). `--mlflow` logs to experiment `briscolab-ppo`.
+  `best.brnn` and the last snapshots under `runs/<name>` (ignored). A network that becomes champion through the arena
+  is copied to `models/ppo.brnn`, which git keeps. `--mlflow` logs to experiment `briscolab-ppo`.
 - `stats.py` (score per duplicate deal, 95% intervals, Bradley-Terry ratings), `arena.py` (`Config`, `run`, the
   report and the JSON results), `tracking.py` (one MLflow run per round robin, experiment `briscolab-arena`),
   `__main__.py` (the `briscolab-arena` command).
