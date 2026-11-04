@@ -19,6 +19,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from itertools import pairwise
 from pathlib import Path
+from typing import Any
 
 import briscolab_engine
 import numpy as np
@@ -50,6 +51,8 @@ class Config:
     hidden: int = 256
     layers: int = 2
     learning_rate: float = 3e-4
+    anneal: bool = False
+    """The learning rate falls linearly from `learning_rate` to 0 at the end of `minutes`."""
     gae_lambda: float = 0.95
     clip: float = 0.2
     entropy: float = 0.01
@@ -296,6 +299,10 @@ def train(
     try:
         while time.monotonic() - start < config.minutes * 60:
             n += 1
+            if config.anneal:
+                left = 1 - (time.monotonic() - start) / (config.minutes * 60)
+                for group in optimizer.param_groups:
+                    group["lr"] = config.learning_rate * max(left, 0.0)
             batch, played = collector.collect(agent)
             games += played
             stats = update(agent, optimizer, batch, config)
@@ -304,7 +311,8 @@ def train(
                 collector.deal(pool.opponents())
             if n % config.eval_every == 0:
                 current.write_bytes(weights_bytes(agent))
-                metrics = {**stats, "games": float(games)}
+                lr = float(optimizer.param_groups[0]["lr"])
+                metrics = {**stats, "games": float(games), "learning_rate": lr}
                 bots = ["hard", "pimc"] if n % config.pimc_every == 0 else ["hard"]
                 for bot in bots:
                     score = evaluate(current, bot, config.eval_deals)
@@ -328,18 +336,38 @@ def train(
     return best
 
 
-def main() -> None:
+def make_parser() -> argparse.ArgumentParser:
+    """The command's flags: the run's name, MLflow, and one flag per field of `Config`."""
     parser = argparse.ArgumentParser(prog="briscolab-ppo", description=__doc__)
     parser.add_argument(
         "--run-name", required=True, help="the run's folder under runs/ and its MLflow name"
     )
-    parser.add_argument("--minutes", type=float, default=Config.minutes)
-    parser.add_argument("--seed", type=int, default=Config.seed)
     parser.add_argument("--mlflow", action="store_true", help="log the run to MLFLOW_TRACKING_URI")
+    defaults = Config()
+    for f in dataclasses.fields(Config):
+        flag = "--" + f.name.replace("_", "-")
+        default = getattr(defaults, f.name)
+        if f.type is bool:
+            parser.add_argument(flag, action=argparse.BooleanOptionalAction, default=default)
+        elif isinstance(default, tuple):
+            parser.add_argument(flag, nargs="+", default=list(default))
+        else:
+            parser.add_argument(flag, type=type(default), default=default)
+    return parser
+
+
+def config_from_args(args: argparse.Namespace) -> Config:
+    values: dict[str, Any] = {f.name: getattr(args, f.name) for f in dataclasses.fields(Config)}
+    values["rule_bots"] = tuple(values["rule_bots"])
+    return Config(**values)
+
+
+def main() -> None:
+    parser = make_parser()
     args = parser.parse_args()
     if args.mlflow and not os.environ.get("MLFLOW_TRACKING_URI"):
         parser.error("--mlflow needs MLFLOW_TRACKING_URI")
-    config = Config(minutes=args.minutes, seed=args.seed)
+    config = config_from_args(args)
     run_dir = Path("runs") / args.run_name
     run_dir.mkdir(parents=True, exist_ok=True)
     params = dataclasses.asdict(config)

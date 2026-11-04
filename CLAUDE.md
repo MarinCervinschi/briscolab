@@ -81,7 +81,9 @@ cargo build -p briscolab-core --target wasm32-unknown-unknown
   against the pool of `Config` (self-play, the last snapshots as `ppo:<file>`, Greedy and Hard), scores the network
   against Hard and, less often, PIMC on deals from seed 1 000 000, and writes `config.json`, `current.brnn`,
   `best.brnn` and the last snapshots under `runs/<name>` (ignored). A network that becomes champion through the arena
-  is copied to `models/ppo.brnn`, which git keeps. `--mlflow` logs to experiment `briscolab-ppo`.
+  is copied to `models/ppo.brnn`, which git keeps. `--mlflow` logs to experiment `briscolab-ppo`. Every field of
+  `Config` is a flag (`--hidden 512`, `--anneal`, `--rule-bots ppo hard`); `experiments/night.sh <night>` runs a
+  night's variants, 170 minutes each, one after the other.
 - `stats.py` (score per duplicate deal, 95% intervals, Bradley-Terry ratings), `arena.py` (`Config`, `run`, the
   report and the JSON results), `tracking.py` (one MLflow run per round robin, experiment `briscolab-arena`),
   `__main__.py` (the `briscolab-arena` command).
@@ -100,6 +102,7 @@ uv run ruff check . && uv run ruff format --check .
 uv run pyright
 uv run briscolab-arena --deals 10000 --out results/<name>.json
 caffeinate -i uv run briscolab-ppo --run-name <name> --minutes 480 --mlflow
+MLFLOW_TRACKING_URI=<tracking uri> experiments/night.sh <night>
 MLFLOW_TRACKING_URI=<tracking uri> uv run briscolab-arena --deals 10000 --mlflow --run-name <name>
 ```
 

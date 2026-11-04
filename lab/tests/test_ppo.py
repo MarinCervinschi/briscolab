@@ -9,7 +9,18 @@ import numpy as np
 import torch
 
 from briscolab_lab.env import TrainingEnv
-from briscolab_lab.ppo import Agent, Batch, Config, Decision, Pool, finish, train, weights_bytes
+from briscolab_lab.ppo import (
+    Agent,
+    Batch,
+    Config,
+    Decision,
+    Pool,
+    config_from_args,
+    finish,
+    make_parser,
+    train,
+    weights_bytes,
+)
 
 
 def test_the_engine_scores_cards_as_pytorch_does() -> None:
@@ -68,8 +79,18 @@ def test_a_short_run_leaves_weights_the_engine_plays(tmp_path: Path) -> None:
         eval_deals=10,
         minutes=0.05,
         threads=1,
+        anneal=True,
     )
     best = train(config, tmp_path)
     assert (tmp_path / "snapshots").is_dir()
     results = briscolab_engine.play_duplicates(list(range(10)), f"ppo:{best}", "hard")
     assert all(a + b <= 240 for a, b in results)
+
+
+def test_every_config_field_has_a_flag() -> None:
+    args = make_parser().parse_args(
+        ["--run-name", "x", "--hidden", "512", "--anneal", "--rule-bots", "ppo", "hard"]
+    )
+    config = config_from_args(args)
+    assert config == Config(hidden=512, anneal=True, rule_bots=("ppo", "hard"))
+    assert config_from_args(make_parser().parse_args(["--run-name", "x"])) == Config()
