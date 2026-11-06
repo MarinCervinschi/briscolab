@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use briscolab_core::{
-    Bot, Card, EndgameBot, GreedyBot, HardBot, IsmctsBot, Network, Outcome, PimcBot, PpoBot,
-    RandomBot, TrainingGame, DECK_SIZE, ENCODING_LEN,
+    Bot, Card, Encoding, EndgameBot, GreedyBot, HardBot, IsmctsBot, Network, Outcome, PimcBot,
+    PpoBot, RandomBot, TrainingGame, DECK_SIZE, MAX_ENCODING_LEN,
 };
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
@@ -163,6 +163,7 @@ struct Slot {
 #[pyclass(module = "briscolab_engine", unsendable)]
 struct VecEnv {
     slots: Vec<Slot>,
+    encoding: Encoding,
     next_seed: u64,
 }
 
@@ -188,7 +189,9 @@ impl VecEnv {
 
     fn observed<'py>(&self, py: Python<'py>) -> Observed<'py> {
         let n = self.slots.len();
-        let mut obs = Vec::with_capacity(n * ENCODING_LEN * 4);
+        let len = self.encoding.inputs();
+        let mut input = [0.0; MAX_ENCODING_LEN];
+        let mut obs = Vec::with_capacity(n * len * 4);
         let mut masks = vec![0u8; n * DECK_SIZE];
         let mut seats = Vec::with_capacity(n);
         for (i, slot) in self.slots.iter().enumerate() {
@@ -196,7 +199,8 @@ impl VecEnv {
                 .game
                 .observation()
                 .expect("every slot waits for a card");
-            for x in o.encode() {
+            o.encode(self.encoding, &mut input[..len]);
+            for x in &input[..len] {
                 obs.extend_from_slice(&x.to_le_bytes());
             }
             for card in o.legal_moves() {
@@ -215,9 +219,19 @@ impl VecEnv {
 #[pymethods]
 impl VecEnv {
     /// One slot per opponent: `self` for self-play, or any bot name `play_duplicates` takes. Deals come from `seed`,
-    /// `seed + 1` and so on, in slot order and then in the order the games end.
+    /// `seed + 1` and so on, in slot order and then in the order the games end. `encoding` is `pooled` or `by-seat`.
     #[new]
-    fn new(opponents: Vec<String>, seed: u64) -> PyResult<VecEnv> {
+    #[pyo3(signature = (opponents, seed, encoding = "pooled"))]
+    fn new(opponents: Vec<String>, seed: u64, encoding: &str) -> PyResult<VecEnv> {
+        let encoding = match encoding {
+            "pooled" => Encoding::Pooled,
+            "by-seat" => Encoding::BySeat,
+            _ => {
+                return Err(PyValueError::new_err(format!(
+                    "no encoding {encoding:?}: pooled or by-seat"
+                )))
+            }
+        };
         let specs = opponents
             .iter()
             .map(|name| match name.as_str() {
@@ -228,6 +242,7 @@ impl VecEnv {
             .map_err(PyValueError::new_err)?;
         let mut env = VecEnv {
             slots: Vec::new(),
+            encoding,
             next_seed: seed,
         };
         for opponent in specs {
@@ -251,7 +266,13 @@ impl VecEnv {
         self.next_seed
     }
 
-    /// `(observations, masks, seats)`: `float32[n, 204]`, `uint8[n, 40]` and `uint8[n]`.
+    /// The numbers in one encoded observation.
+    #[getter]
+    fn inputs(&self) -> usize {
+        self.encoding.inputs()
+    }
+
+    /// `(observations, masks, seats)`: `float32[n, inputs]`, `uint8[n, 40]` and `uint8[n]`.
     fn observe<'py>(&self, py: Python<'py>) -> Observed<'py> {
         self.observed(py)
     }

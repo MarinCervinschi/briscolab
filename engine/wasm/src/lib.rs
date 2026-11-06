@@ -2,9 +2,9 @@
 //! the bots with their reasoning. Translation only; values cross to JavaScript as JSON.
 
 use briscolab_core::{
-    Bot, Card, CardSet, EndgameBot, EndgameReason, Game, GreedyBot, GreedyRule, HardBot, HardRule,
-    IsmctsSearch, Network, Observation, Outcome, Player, PpoBot, RandomBot, Rng, Trick, DECK_SIZE,
-    HAND_SIZE, PLAYERS,
+    Bot, Card, CardSet, Encoding, EndgameBot, EndgameReason, Game, GreedyBot, GreedyRule, HardBot,
+    HardRule, IsmctsSearch, Network, Observation, Outcome, Player, PpoBot, RandomBot, Rng, Trick,
+    DECK_SIZE, HAND_SIZE, PLAYERS,
 };
 use serde_json::{json, Value};
 use std::sync::Arc;
@@ -143,7 +143,7 @@ impl Session {
             }
             SeatBot::Ppo { bot, network } => {
                 let card = bot.act(&obs);
-                chosen((card, network_reasoning(&obs, network)))
+                chosen((card, network_reasoning(&obs, network, bot.encoding())))
             }
             SeatBot::Ismcts { iterations, rng } => Thinking::Search {
                 search: IsmctsSearch::new(obs, rng.clone()),
@@ -307,10 +307,11 @@ fn endgame_reasoning(reason: &EndgameReason) -> Value {
 }
 
 /// The probability the network gives each legal card, a softmax of its scores over those cards as in training, and
-/// a few of its numbers on the way: what goes in, grouped as `Observation::encode` lays it out, and the most active
-/// neurons of each hidden layer in index order, scaled to the largest.
-fn network_reasoning(obs: &Observation, network: &Network) -> Value {
-    let input = obs.encode();
+/// a few of its numbers on the way: what goes in, grouped as `Observation::encode` lays it out with the played cards
+/// in one group, and the most active neurons of each hidden layer in index order, scaled to the largest.
+fn network_reasoning(obs: &Observation, network: &Network, encoding: Encoding) -> Value {
+    let mut input = vec![0.0; encoding.inputs()];
+    obs.encode(encoding, &mut input);
     let layers = network.activations(&input);
     let scores = layers.last().expect("a network has a layer");
     let moves = obs.legal_moves();
@@ -318,14 +319,19 @@ fn network_reasoning(obs: &Observation, network: &Network) -> Value {
     let top = moves.iter().map(score).fold(f32::MIN, f32::max);
     let total: f32 = moves.iter().map(|c| (score(c) - top).exp()).sum();
 
+    let marked = |n: usize| -> f32 { input[n * DECK_SIZE..(n + 1) * DECK_SIZE].iter().sum() };
+    let mut groups: Vec<f32> = (0..encoding.sets()).map(marked).collect();
+    if encoding == Encoding::BySeat {
+        // This player's played cards and the opponent's, shown as one group.
+        let opponent = groups.remove(3);
+        groups[2] += opponent;
+    }
     let sets = [HAND_SIZE, 1, DECK_SIZE, 1, 1]
         .iter()
-        .enumerate()
-        .map(|(n, &capacity)| {
-            let marked: f32 = input[n * DECK_SIZE..(n + 1) * DECK_SIZE].iter().sum();
-            (marked / capacity as f32).min(1.0)
-        });
-    let inputs: Vec<f32> = sets.chain(input[5 * DECK_SIZE..].iter().copied()).collect();
+        .zip(groups)
+        .map(|(&capacity, marked)| (marked / capacity as f32).min(1.0));
+    let numbers = encoding.sets() * DECK_SIZE;
+    let inputs: Vec<f32> = sets.chain(input[numbers..].iter().copied()).collect();
     let hidden: Vec<Vec<f32>> = layers[..layers.len() - 1]
         .iter()
         .map(|layer| {

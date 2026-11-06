@@ -25,7 +25,7 @@ pub use card_set::CardSet;
 pub use duplicate::play_duplicate;
 pub use game::{DeckError, Game, Outcome, PlayError, HAND_SIZE, STOCK_SIZE, TRICKS};
 pub use network::{Network, WeightsError};
-pub use observation::{Observation, ENCODING_LEN};
+pub use observation::{Encoding, Observation, MAX_ENCODING_LEN};
 pub use player::{Player, PLAYERS};
 pub use rng::Rng;
 pub use solver::{solve, solve_each};

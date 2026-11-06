@@ -48,6 +48,8 @@ class Config:
     snapshots: int = 10
     snapshot_every: int = 20
     """Updates between two snapshots; the pool's games are dealt afresh then."""
+    encoding: str = "pooled"
+    """`pooled` or `by-seat`, which splits the played cards by who played them."""
     hidden: int = 256
     layers: int = 2
     learning_rate: float = 3e-4
@@ -73,9 +75,9 @@ class Config:
 class Agent(nn.Module):
     """A trunk of ReLU layers with two heads: a score per card, and the value of the position."""
 
-    def __init__(self, hidden: int, layers: int) -> None:
+    def __init__(self, hidden: int, layers: int, inputs: int = ENCODING_LEN) -> None:
         super().__init__()
-        sizes = [ENCODING_LEN] + [hidden] * layers
+        sizes = [inputs] + [hidden] * layers
         self.trunk = nn.ModuleList(nn.Linear(a, b) for a, b in pairwise(sizes))
         self.policy = nn.Linear(hidden, CARDS)
         self.value = nn.Linear(hidden, 1)
@@ -191,7 +193,7 @@ class Collector:
         """New games against these opponents; games still in play are dropped."""
         if self.env:
             self.next_seed = self.env.next_seed
-        self.env = TrainingEnv(opponents, self.next_seed)
+        self.env = TrainingEnv(opponents, self.next_seed, self.config.encoding)
         self.step = self.env.reset()
         self.chains = [[[], []] for _ in opponents]
 
@@ -286,11 +288,12 @@ def train(
     """
     torch.manual_seed(config.seed)
     torch.set_num_threads(config.threads)
-    agent = Agent(config.hidden, config.layers)
-    optimizer = torch.optim.Adam(agent.parameters(), lr=config.learning_rate, eps=1e-5)
     pool = Pool(config, run_dir)
     collector = Collector(config, seed=config.seed << 32)
     collector.deal(pool.opponents())
+    assert collector.env
+    agent = Agent(config.hidden, config.layers, collector.env.inputs)
+    optimizer = torch.optim.Adam(agent.parameters(), lr=config.learning_rate, eps=1e-5)
     current, best = run_dir / "current.brnn", run_dir / "best.brnn"
     best_score = -1.0
     games = 0

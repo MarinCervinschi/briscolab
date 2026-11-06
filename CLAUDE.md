@@ -25,7 +25,8 @@ scaffold (static, bilingual, offline); it plays the five levels (the fifth is `p
 - `engine/core` (crate `briscolab-core`, no dependencies), one concept per module: `card.rs` (`Card`, `Suit`,
   `Rank`), `card_set.rs` (`CardSet`, a bitset over a `u64`), `player.rs`, `trick.rs` (`Trick`, `trick_winner`),
   `game.rs` (`Game`: deal, drawing, scoring, end), `observation.rs` (what one player knows, and `encode`, the
-  204 numbers a network reads), `network.rs` (`Network`: an MLP's forward pass and its weights file, read from bytes), `rng.rs`
+  numbers a network reads: `Encoding::Pooled`, 204, or `BySeat`, 244, with the played cards split by who played them; a network's
+  input size names its encoding), `network.rs` (`Network`: an MLP's forward pass and its weights file, read from bytes), `rng.rs`
   (xoshiro256** seeded by SplitMix64, same numbers on every platform), `bot/` (`Bot::act` and `play_out` in
   `mod.rs`, one file per bot: `random.rs`, `greedy.rs`, `hard.rs`, `endgame.rs`, `pimc.rs`, `ismcts.rs`, `ppo.rs`, the network while the deck lasts and then the solver; `playout`
   in `mod.rs` is the search bots' rollout: Hard while the deck lasts, then the solver), `duplicate.rs`
@@ -40,7 +41,7 @@ scaffold (static, bilingual, offline); it plays the five levels (the fifth is `p
   network's weights) and `make_bot` builds it per
   deal; a new bot goes there and in `BOT_NAMES`. `play_duplicates` plays a
   batch of deals on every core with rayon, the only threads in the engine: `core` stays single-threaded. `VecEnv`
-  steps many `TrainingGame`s in one call for training and returns raw little-endian bytes; one slot per opponent,
+  steps many `TrainingGame`s in one call for training and returns raw little-endian bytes, in the encoding it is given; one slot per opponent,
   `self` for self-play.
 - The bots explain their card next to `act`: `GreedyBot::choose` and `HardBot::choose` return the rule that fired,
   `EndgameBot::choose` that rule or every card's exact result (`solve_each`), and `IsmctsSearch` is ISMCTS in
@@ -82,7 +83,7 @@ cargo build -p briscolab-core --target wasm32-unknown-unknown
   against Hard and, less often, PIMC on deals from seed 1 000 000, and writes `config.json`, `current.brnn`,
   `best.brnn` and the last snapshots under `runs/<name>` (ignored). A network that becomes champion through the arena
   is copied to `models/ppo.brnn`, which git keeps. `--mlflow` logs to experiment `briscolab-ppo`. Every field of
-  `Config` is a flag (`--hidden 512`, `--anneal`, `--rule-bots ppo hard`); `experiments/night.sh <night>` runs a
+  `Config` is a flag (`--hidden 512`, `--anneal`, `--rule-bots ppo hard`, `--encoding by-seat`); `experiments/night.sh <night>` runs a
   night's variants, 170 minutes each, one after the other.
 - `stats.py` (score per duplicate deal, 95% intervals, Bradley-Terry ratings), `arena.py` (`Config`, `run`, the
   report and the JSON results), `tracking.py` (one MLflow run per round robin, experiment `briscolab-arena`),

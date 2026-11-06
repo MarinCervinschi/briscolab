@@ -19,6 +19,18 @@ def test_every_game_shows_a_legal_choice_from_the_seat_to_play() -> None:
         step = env.step(first_legal(step.masks))
 
 
+def test_the_by_seat_encoding_splits_the_played_cards_of_the_pooled_one() -> None:
+    pooled = TrainingEnv(["hard"], seed=3)
+    by_seat = TrainingEnv(["hard"], seed=3, encoding="by-seat")
+    a, b = pooled.reset(), by_seat.reset()
+    for _ in range(30):
+        assert b.obs.shape == (1, 244)
+        # Pooled: hand, table, played...; by seat: hand, table, played by me, by the opponent...
+        np.testing.assert_array_equal(a.obs[:, 80:120], b.obs[:, 80:120] + b.obs[:, 120:160])
+        np.testing.assert_array_equal(a.obs[:, 120:], b.obs[:, 160:])
+        a, b = pooled.step(first_legal(a.masks)), by_seat.step(first_legal(b.masks))
+
+
 def test_a_finished_game_pays_its_seats_and_makes_room_for_the_next_deal() -> None:
     env = TrainingEnv(["self"] * 4 + ["hard"] * 4, seed=10)
     step = env.reset()
@@ -66,3 +78,5 @@ def test_an_illegal_card_or_a_bad_opponent_is_refused() -> None:
         env.step(illegal)
     with pytest.raises(ValueError):
         TrainingEnv(["nobody"], seed=0)
+    with pytest.raises(ValueError):
+        TrainingEnv(["hard"], seed=0, encoding="nobody")

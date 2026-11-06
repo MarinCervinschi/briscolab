@@ -7,6 +7,7 @@ import numpy as np
 import numpy.typing as npt
 
 ENCODING_LEN = 204
+"""The inputs of the `pooled` encoding, the champion's."""
 CARDS = 40
 
 
@@ -18,7 +19,7 @@ class Step:
     """
 
     obs: npt.NDArray[np.float32]
-    """`[n, 204]`: each game's encoded observation, from the side of the seat to play."""
+    """`[n, inputs]`: each game's encoded observation, from the side of the seat to play."""
     masks: npt.NDArray[np.bool_]
     """`[n, 40]`: the cards that seat may play."""
     seats: npt.NDArray[np.uint8]
@@ -30,11 +31,16 @@ class Step:
 
 
 class TrainingEnv:
-    """One slot per opponent: `self` for self-play, or a bot name such as `hard` or `ppo:<file>`."""
+    """One slot per opponent: `self` for self-play, or a bot name such as `hard` or `ppo:<file>`.
 
-    def __init__(self, opponents: list[str], seed: int) -> None:
-        self._env = briscolab_engine.VecEnv(opponents, seed)
+    `encoding` is `pooled` (204 inputs) or `by-seat` (244, the played cards split by who played
+    them).
+    """
+
+    def __init__(self, opponents: list[str], seed: int, encoding: str = "pooled") -> None:
+        self._env = briscolab_engine.VecEnv(opponents, seed, encoding)
         self.n = len(opponents)
+        self.inputs: int = self._env.inputs
         self.first_seed = seed
 
     @property
@@ -50,7 +56,7 @@ class TrainingEnv:
     def _step(self, obs: bytes, masks: bytes, seats: bytes, done: bytes, rewards: bytes) -> Step:
         return Step(
             # Copied, since an array over bytes is read-only and PyTorch wants to own what it reads.
-            obs=np.frombuffer(obs, dtype="<f4").reshape(self.n, ENCODING_LEN).copy(),
+            obs=np.frombuffer(obs, dtype="<f4").reshape(self.n, self.inputs).copy(),
             masks=np.frombuffer(masks, dtype=np.uint8).reshape(self.n, CARDS).astype(np.bool_),
             seats=np.frombuffer(seats, dtype=np.uint8),
             done=np.frombuffer(done, dtype=np.uint8).astype(np.bool_),

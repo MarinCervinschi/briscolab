@@ -12,7 +12,7 @@ run() {
 		echo "$night-$name failed"
 }
 
-run base-s1 --seed 1
-run anneal --anneal
-run pool-champion --rule-bots ppo hard
-run big-anneal --hidden 512 --layers 3 --anneal
+run by-seat --encoding by-seat
+run by-seat-s1 --encoding by-seat --seed 1
+run big --hidden 512 --layers 3
+run by-seat-big --encoding by-seat --hidden 512 --layers 3

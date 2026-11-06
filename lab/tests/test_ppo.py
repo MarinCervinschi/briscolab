@@ -80,6 +80,7 @@ def test_a_short_run_leaves_weights_the_engine_plays(tmp_path: Path) -> None:
         minutes=0.05,
         threads=1,
         anneal=True,
+        encoding="by-seat",
     )
     best = train(config, tmp_path)
     assert (tmp_path / "snapshots").is_dir()
@@ -89,8 +90,19 @@ def test_a_short_run_leaves_weights_the_engine_plays(tmp_path: Path) -> None:
 
 def test_every_config_field_has_a_flag() -> None:
     args = make_parser().parse_args(
-        ["--run-name", "x", "--hidden", "512", "--anneal", "--rule-bots", "ppo", "hard"]
+        [
+            "--run-name",
+            "x",
+            "--hidden",
+            "512",
+            "--anneal",
+            "--rule-bots",
+            "ppo",
+            "hard",
+            "--encoding",
+            "by-seat",
+        ]
     )
     config = config_from_args(args)
-    assert config == Config(hidden=512, anneal=True, rule_bots=("ppo", "hard"))
+    assert config == Config(hidden=512, anneal=True, rule_bots=("ppo", "hard"), encoding="by-seat")
     assert config_from_args(make_parser().parse_args(["--run-name", "x"])) == Config()

@@ -20,7 +20,14 @@ fn marked(input: &[f32], n: usize) -> CardSet {
         .collect()
 }
 
-/// P1 answers a trick late in the game; P0 drew the face-up briscola and still holds it.
+fn encode(obs: &Observation, encoding: Encoding) -> Vec<f32> {
+    let mut input = vec![0.0; encoding.inputs()];
+    obs.encode(encoding, &mut input);
+    input
+}
+
+/// P1 answers a trick late in the game; P0 drew the face-up briscola and still holds it. P1 led both finished
+/// tricks: the 7 of denari, taken over P0's 6, then the 4 of coppe, taken by P0's Asso.
 fn late_observation() -> Observation {
     Observation {
         player: Player::P1,
@@ -34,14 +41,25 @@ fn late_observation() -> Observation {
         hand_lens: [1, 2],
         leader: Player::P0,
         to_play: Some(Player::P1),
-        tricks: Vec::new(),
+        tricks: vec![
+            Trick {
+                leader: Player::P1,
+                cards: [c("7d"), c("6d")],
+                winner: Player::P1,
+            },
+            Trick {
+                leader: Player::P1,
+                cards: [c("4c"), c("1c")],
+                winner: Player::P0,
+            },
+        ],
     }
 }
 
 #[test]
 fn the_encoding_marks_each_set_of_cards_from_the_players_side() {
-    let input = late_observation().encode();
-    assert_eq!(input.len(), ENCODING_LEN);
+    let input = encode(&late_observation(), Encoding::Pooled);
+    assert_eq!(input.len(), 204);
     assert_eq!(marked(&input, 0), set("2s 5d"));
     assert_eq!(marked(&input, 1), set("3b"));
     assert_eq!(marked(&input, 2), set("1c 4c 6d 7d"));
@@ -53,10 +71,35 @@ fn the_encoding_marks_each_set_of_cards_from_the_players_side() {
 }
 
 #[test]
+fn the_by_seat_encoding_splits_the_played_cards_by_who_played_them() {
+    let obs = late_observation();
+    let input = encode(&obs, Encoding::BySeat);
+    assert_eq!(input.len(), 244);
+    assert_eq!(marked(&input, 0), set("2s 5d"));
+    assert_eq!(marked(&input, 1), set("3b"));
+    assert_eq!(marked(&input, 2), set("7d 4c"));
+    assert_eq!(marked(&input, 3), set("6d 1c"));
+    assert_eq!(marked(&input, 4), set("7c"));
+    assert_eq!(marked(&input, 5), set("7c"));
+    assert_eq!(
+        &input[6 * DECK_SIZE..],
+        &encode(&obs, Encoding::Pooled)[5 * DECK_SIZE..]
+    );
+}
+
+#[test]
+fn a_networks_inputs_name_its_encoding() {
+    assert_eq!(Encoding::from_inputs(204), Some(Encoding::Pooled));
+    assert_eq!(Encoding::from_inputs(244), Some(Encoding::BySeat));
+    assert_eq!(Encoding::from_inputs(100), None);
+    assert_eq!(MAX_ENCODING_LEN, 244);
+}
+
+#[test]
 fn the_encoding_of_a_fresh_deal_shows_only_the_hand_and_the_briscola() {
     let game = Game::new(7);
     let obs = game.observation(Player::P0);
-    let input = obs.encode();
+    let input = encode(&obs, Encoding::Pooled);
     assert_eq!(marked(&input, 0), obs.hand);
     assert_eq!(marked(&input, 1), CardSet::EMPTY);
     assert_eq!(marked(&input, 2), CardSet::EMPTY);
@@ -82,7 +125,11 @@ fn the_forward_pass_applies_relu_between_layers_only() {
 }
 
 fn random_network(seed: u64) -> Network {
-    Network::random(&[ENCODING_LEN, 16, 16, DECK_SIZE], &mut Rng::new(seed))
+    network_for(Encoding::Pooled, seed)
+}
+
+fn network_for(encoding: Encoding, seed: u64) -> Network {
+    Network::random(&[encoding.inputs(), 16, 16, DECK_SIZE], &mut Rng::new(seed))
 }
 
 #[test]
@@ -114,12 +161,21 @@ fn a_damaged_weights_file_is_rejected() {
 fn the_bot_needs_one_input_per_encoded_number_and_one_output_per_card() {
     let small = Network::new(vec![(vec![vec![1.0; 3]; DECK_SIZE], vec![0.0; DECK_SIZE])]);
     assert_eq!(PpoBot::new(Arc::new(small)).err(), Some(ShapeError));
-    assert!(PpoBot::new(Arc::new(random_network(1))).is_ok());
+    for encoding in [Encoding::Pooled, Encoding::BySeat] {
+        let bot = PpoBot::new(Arc::new(network_for(encoding, 1))).unwrap();
+        assert_eq!(bot.encoding(), encoding);
+    }
 }
 
 #[test]
 fn the_bot_plays_its_highest_scored_legal_card_while_the_deck_lasts() {
-    let mut bot = PpoBot::new(Arc::new(random_network(5))).unwrap();
+    for encoding in [Encoding::Pooled, Encoding::BySeat] {
+        let mut bot = PpoBot::new(Arc::new(network_for(encoding, 5))).unwrap();
+        plays_highest_scored(&mut bot);
+    }
+}
+
+fn plays_highest_scored(bot: &mut PpoBot) {
     for seed in 0..50 {
         let game = Game::new(seed);
         let obs = game.observation(Player::P0);
@@ -151,7 +207,7 @@ fn the_bot_plays_exactly_once_the_deck_is_empty() {
 #[test]
 fn the_last_activations_are_the_forward_pass() {
     let network = random_network(9);
-    let input = Game::new(4).observation(Player::P0).encode();
+    let input = encode(&Game::new(4).observation(Player::P0), Encoding::Pooled);
     let (mut a, mut b) = (vec![0.0; network.width()], vec![0.0; network.width()]);
     let layers = network.activations(&input);
     assert_eq!(
@@ -159,4 +215,20 @@ fn the_last_activations_are_the_forward_pass() {
         [16, 16, DECK_SIZE]
     );
     assert_eq!(layers[2], network.forward(&input, &mut a, &mut b));
+}
+
+#[test]
+fn the_two_played_sets_split_the_played_cards_in_real_games() {
+    for seed in 0..200 {
+        let mut game = Game::new(seed);
+        while let Some(player) = game.to_play() {
+            let obs = game.observation(player);
+            let pooled = encode(&obs, Encoding::Pooled);
+            let by_seat = encode(&obs, Encoding::BySeat);
+            let (mine, theirs) = (marked(&by_seat, 2), marked(&by_seat, 3));
+            assert_eq!(mine.intersection(theirs), CardSet::EMPTY, "seed {seed}");
+            assert_eq!(mine.union(theirs), marked(&pooled, 2), "seed {seed}");
+            game.play(HardBot.act(&obs)).unwrap();
+        }
+    }
 }
