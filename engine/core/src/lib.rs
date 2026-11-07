@@ -23,7 +23,7 @@ pub use bot::{
 pub use card::{Card, Rank, Suit, DECK_SIZE, TOTAL_POINTS};
 pub use card_set::CardSet;
 pub use duplicate::play_duplicate;
-pub use game::{DeckError, Game, Outcome, PlayError, HAND_SIZE, STOCK_SIZE, TRICKS};
+pub use game::{DeckError, Game, Outcome, PlayError, HAND_SIZE, HIDDEN_LEN, STOCK_SIZE, TRICKS};
 pub use network::{Network, WeightsError};
 pub use observation::{Encoding, Observation, MAX_ENCODING_LEN};
 pub use player::{Player, PLAYERS};

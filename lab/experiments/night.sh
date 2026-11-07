@@ -12,7 +12,7 @@ run() {
 		echo "$night-$name failed"
 }
 
-run by-seat --encoding by-seat
-run by-seat-s1 --encoding by-seat --seed 1
-run big --hidden 512 --layers 3
-run by-seat-big --encoding by-seat --hidden 512 --layers 3
+run critic --informed-critic
+run points --points-weight 0.5
+run both --informed-critic --points-weight 0.5
+run both-s1 --informed-critic --points-weight 0.5 --seed 1

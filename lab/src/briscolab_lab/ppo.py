@@ -2,7 +2,8 @@
 
 The network chooses the card while the deck lasts and the engine's solver plays the last three
 tricks (decisions 18 to 25 in SPEC.md). Training uses whole games only: a game's decisions are kept
-until it ends, then its result, +1, 0 or -1, flows back to every decision of each seat.
+until it ends, then its reward flows back to every decision of each seat. The reward is the result,
++1, 0 or -1, mixed with the point difference when `points_weight` is above 0.
 """
 
 # torch.distributions has no type annotations, so strict mode cannot follow the losses built on it.
@@ -28,7 +29,7 @@ import torch
 from torch import nn
 
 from briscolab_lab.__main__ import git_commit
-from briscolab_lab.env import CARDS, ENCODING_LEN, TrainingEnv
+from briscolab_lab.env import CARDS, ENCODING_LEN, HIDDEN_LEN, TrainingEnv
 from briscolab_lab.stats import Interval, deal_score, mean_interval
 
 # Far from the arena's seeds, which start at 0: the final verdict plays deals no checkpoint was
@@ -52,6 +53,10 @@ class Config:
     """`pooled` or `by-seat`, which splits the played cards by who played them."""
     hidden: int = 256
     layers: int = 2
+    informed_critic: bool = False
+    """The value comes from a network of its own that also reads what the seat cannot see."""
+    points_weight: float = 0.0
+    """The reward is `(1 - w)` times the result plus `w` times the point difference over 120."""
     learning_rate: float = 3e-4
     anneal: bool = False
     """The learning rate falls linearly from `learning_rate` to 0 at the end of `minutes`."""
@@ -72,21 +77,36 @@ class Config:
     threads: int = field(default_factory=lambda: os.cpu_count() or 1)
 
 
-class Agent(nn.Module):
-    """A trunk of ReLU layers with two heads: a score per card, and the value of the position."""
+def mlp(sizes: list[int]) -> nn.ModuleList:
+    return nn.ModuleList(nn.Linear(a, b) for a, b in pairwise(sizes))
 
-    def __init__(self, hidden: int, layers: int, inputs: int = ENCODING_LEN) -> None:
+
+def relu_through(layers: nn.ModuleList, x: torch.Tensor) -> torch.Tensor:
+    for layer in layers:
+        x = torch.relu(layer(x))
+    return x
+
+
+class Agent(nn.Module):
+    """A trunk of ReLU layers with two heads: a score per card, and the value of the position.
+
+    With `informed` the value comes from a second trunk that also reads what the seat cannot see;
+    the engine's weights file holds only the first trunk and the scores, so the bot never does.
+    """
+
+    def __init__(
+        self, hidden: int, layers: int, inputs: int = ENCODING_LEN, informed: bool = False
+    ) -> None:
         super().__init__()
-        sizes = [inputs] + [hidden] * layers
-        self.trunk = nn.ModuleList(nn.Linear(a, b) for a, b in pairwise(sizes))
+        self.trunk = mlp([inputs] + [hidden] * layers)
         self.policy = nn.Linear(hidden, CARDS)
+        self.critic = mlp([inputs + HIDDEN_LEN] + [hidden] * layers) if informed else None
         self.value = nn.Linear(hidden, 1)
 
-    def forward(self, obs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        x = obs
-        for layer in self.trunk:
-            x = torch.relu(layer(x))
-        return self.policy(x), self.value(x).squeeze(-1)
+    def forward(self, obs: torch.Tensor, unseen: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        x = relu_through(self.trunk, obs)
+        v = x if self.critic is None else relu_through(self.critic, torch.cat([obs, unseen], -1))
+        return self.policy(x), self.value(v).squeeze(-1)
 
 
 def masked(logits: torch.Tensor, masks: torch.Tensor) -> torch.Tensor:
@@ -108,6 +128,7 @@ def weights_bytes(agent: Agent) -> bytes:
 @dataclass
 class Batch:
     obs: list[npt.NDArray[np.float32]] = field(default_factory=lambda: [])
+    unseen: list[npt.NDArray[np.float32]] = field(default_factory=lambda: [])
     masks: list[npt.NDArray[np.bool_]] = field(default_factory=lambda: [])
     actions: list[int] = field(default_factory=lambda: [])
     logprobs: list[float] = field(default_factory=lambda: [])
@@ -121,6 +142,7 @@ class Batch:
 @dataclass
 class Decision:
     obs: npt.NDArray[np.float32]
+    unseen: npt.NDArray[np.float32]
     mask: npt.NDArray[np.bool_]
     action: int
     logprob: float
@@ -140,6 +162,7 @@ def finish(chain: list[Decision], reward: float, lam: float, batch: Batch) -> No
         next_value = chain[i].value
     for d, (adv, ret) in zip(chain, reversed(out), strict=True):
         batch.obs.append(d.obs)
+        batch.unseen.append(d.unseen)
         batch.masks.append(d.mask)
         batch.actions.append(d.action)
         batch.logprobs.append(d.logprob)
@@ -203,7 +226,7 @@ class Collector:
         while len(batch) < self.config.samples:
             step = self.step
             with torch.no_grad():
-                logits, values = agent(torch.from_numpy(step.obs))
+                logits, values = agent(torch.from_numpy(step.obs), torch.from_numpy(step.hidden))
                 dist = torch.distributions.Categorical(
                     logits=masked(logits, torch.from_numpy(step.masks))
                 )
@@ -214,6 +237,7 @@ class Collector:
                 self.chains[i][step.seats[i]].append(
                     Decision(
                         step.obs[i],
+                        step.hidden[i],
                         step.masks[i],
                         int(actions[i]),
                         float(logprobs[i]),
@@ -227,18 +251,25 @@ class Collector:
                     if self.chains[i][seat]:
                         finish(
                             self.chains[i][seat],
-                            float(self.step.rewards[i, seat]),
+                            self.reward(int(i), seat),
                             self.config.gae_lambda,
                             batch,
                         )
                 self.chains[i] = [[], []]
         return batch, games
 
+    def reward(self, slot: int, seat: int) -> float:
+        w = self.config.points_weight
+        points = self.step.points[slot].astype(np.float32)
+        difference = float(points[seat] - points[1 - seat]) / 120
+        return (1 - w) * float(self.step.rewards[slot, seat]) + w * difference
+
 
 def update(
     agent: Agent, optimizer: torch.optim.Optimizer, batch: Batch, config: Config
 ) -> dict[str, float]:
     obs = torch.from_numpy(np.stack(batch.obs))
+    unseen = torch.from_numpy(np.stack(batch.unseen))
     masks = torch.from_numpy(np.stack(batch.masks))
     actions = torch.tensor(batch.actions)
     old_logprobs = torch.tensor(batch.logprobs, dtype=torch.float32)
@@ -248,7 +279,7 @@ def update(
     stats: dict[str, float] = {}
     for _ in range(config.epochs):
         for idx in torch.randperm(len(batch)).split(config.minibatch):
-            logits, values = agent(obs[idx])
+            logits, values = agent(obs[idx], unseen[idx])
             dist = torch.distributions.Categorical(logits=masked(logits, masks[idx]))
             ratio = (dist.log_prob(actions[idx]) - old_logprobs[idx]).exp()
             adv = advantages[idx]
@@ -292,7 +323,7 @@ def train(
     collector = Collector(config, seed=config.seed << 32)
     collector.deal(pool.opponents())
     assert collector.env
-    agent = Agent(config.hidden, config.layers, collector.env.inputs)
+    agent = Agent(config.hidden, config.layers, collector.env.inputs, config.informed_critic)
     optimizer = torch.optim.Adam(agent.parameters(), lr=config.learning_rate, eps=1e-5)
     current, best = run_dir / "current.brnn", run_dir / "best.brnn"
     best_score = -1.0

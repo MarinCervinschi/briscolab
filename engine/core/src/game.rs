@@ -18,6 +18,9 @@ pub const TRICKS: usize = DECK_SIZE / PLAYERS;
 /// Cards to draw after the deal: the deck plus the face-up briscola, which is drawn last.
 pub const STOCK_SIZE: usize = DECK_SIZE - PLAYERS * HAND_SIZE;
 
+/// The numbers [`Game::encode_hidden`] writes: the opponent's hand, then the stock's order.
+pub const HIDDEN_LEN: usize = 2 * DECK_SIZE;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Outcome {
     Win(Player),
@@ -311,5 +314,25 @@ impl Game {
     /// The cards still to draw, in order, the face-up briscola last. Hidden information.
     pub fn stock(&self) -> &[Card] {
         &self.stock[self.drawn..]
+    }
+
+    /// What `player` cannot see, as numbers for a critic in training: 1 for each card of the opponent's hand, then
+    /// for each card still to draw its place in the stock, from 1 for the next one down to `1 / len` for the last.
+    /// Hidden information: never an input of a bot.
+    ///
+    /// # Panics
+    ///
+    /// If `out` does not hold exactly [`HIDDEN_LEN`] numbers.
+    pub fn encode_hidden(&self, player: Player, out: &mut [f32]) {
+        assert_eq!(out.len(), HIDDEN_LEN, "an input of the wrong size");
+        out.fill(0.0);
+        for card in self.hand(player.next()) {
+            out[usize::from(card.index())] = 1.0;
+        }
+        let stock = self.stock();
+        for (i, card) in stock.iter().enumerate() {
+            out[DECK_SIZE + usize::from(card.index())] =
+                (stock.len() - i) as f32 / stock.len() as f32;
+        }
     }
 }

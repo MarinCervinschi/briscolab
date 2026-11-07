@@ -42,7 +42,7 @@ scaffold (static, bilingual, offline); it plays the five levels (the fifth is `p
   deal; a new bot goes there and in `BOT_NAMES`. `play_duplicates` plays a
   batch of deals on every core with rayon, the only threads in the engine: `core` stays single-threaded. `VecEnv`
   steps many `TrainingGame`s in one call for training and returns raw little-endian bytes, in the encoding it is given; one slot per opponent,
-  `self` for self-play.
+  `self` for self-play. It also returns, for training only, what the seat to play cannot see (`Game::encode_hidden`: the opponent's hand and the stock's order) and each seat's points at the end of a game.
 - The bots explain their card next to `act`: `GreedyBot::choose` and `HardBot::choose` return the rule that fired,
   `EndgameBot::choose` that rule or every card's exact result (`solve_each`), and `IsmctsSearch` is ISMCTS in
   steps (`run`, `stats`, `hypotheses`, `best`), which `IsmctsBot::act` runs in one go with the same random numbers.
@@ -83,7 +83,7 @@ cargo build -p briscolab-core --target wasm32-unknown-unknown
   against Hard and, less often, PIMC on deals from seed 1 000 000, and writes `config.json`, `current.brnn`,
   `best.brnn` and the last snapshots under `runs/<name>` (ignored). A network that becomes champion through the arena
   is copied to `models/ppo.brnn`, which git keeps. `--mlflow` logs to experiment `briscolab-ppo`. Every field of
-  `Config` is a flag (`--hidden 512`, `--anneal`, `--rule-bots ppo hard`, `--encoding by-seat`); `experiments/night.sh <night>` runs a
+  `Config` is a flag (`--hidden 512`, `--anneal`, `--rule-bots ppo hard`, `--encoding by-seat`, `--informed-critic` for a value network that also reads what the seat cannot see, `--points-weight 0.5` to mix the point difference into the reward); `experiments/night.sh <night>` runs a
   night's variants, 170 minutes each, one after the other.
 - `stats.py` (score per duplicate deal, 95% intervals, Bradley-Terry ratings), `arena.py` (`Config`, `run`, the
   report and the JSON results), `tracking.py` (one MLflow run per round robin, experiment `briscolab-arena`),

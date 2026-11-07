@@ -75,3 +75,31 @@ fn an_illegal_card_is_refused_and_the_game_is_unchanged() {
     assert!(game.play(illegal).is_err());
     assert_eq!(game.observation(), Some(obs));
 }
+
+#[test]
+fn the_hidden_encoding_holds_the_opponents_hand_and_the_stocks_order() {
+    let mut game = Game::new(11);
+    let mut out = [0.0; HIDDEN_LEN];
+    for _ in 0..10 {
+        let player = game.to_play().unwrap();
+        game.encode_hidden(player, &mut out);
+        let hand: CardSet = (0..DECK_SIZE as u8)
+            .filter(|&i| out[usize::from(i)] == 1.0)
+            .map(|i| Card::from_index(i).unwrap())
+            .collect();
+        assert_eq!(hand, game.hand(player.next()));
+        let mut stock: Vec<(f32, Card)> = (0..DECK_SIZE as u8)
+            .filter(|&i| out[DECK_SIZE + usize::from(i)] > 0.0)
+            .map(|i| {
+                (
+                    out[DECK_SIZE + usize::from(i)],
+                    Card::from_index(i).unwrap(),
+                )
+            })
+            .collect();
+        stock.sort_by(|a, b| b.0.total_cmp(&a.0));
+        let order: Vec<Card> = stock.into_iter().map(|(_, card)| card).collect();
+        assert_eq!(order, game.stock());
+        game.play(game.legal_moves().nth(0).unwrap()).unwrap();
+    }
+}

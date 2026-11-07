@@ -41,7 +41,11 @@ def test_a_finished_game_pays_its_seats_and_makes_room_for_the_next_deal() -> No
             finished += 1
             assert step.rewards[i].sum() == 0
             assert set(step.rewards[i]) <= {-1.0, 0.0, 1.0}
+            assert int(step.points[i].sum()) == 120
+            a, b = step.points[i].astype(int)
+            assert step.rewards[i, 0] == np.sign(a - b)
         assert (step.rewards[~step.done] == 0).all()
+        assert (step.points[~step.done] == 0).all()
     assert finished > 0
     assert env.next_seed == 10 + 8 + finished
 
@@ -80,3 +84,16 @@ def test_an_illegal_card_or_a_bad_opponent_is_refused() -> None:
         TrainingEnv(["nobody"], seed=0)
     with pytest.raises(ValueError):
         TrainingEnv(["hard"], seed=0, encoding="nobody")
+
+
+def test_the_hidden_part_holds_the_three_cards_of_the_opponent_out_of_sight() -> None:
+    env = TrainingEnv(["self"] * 4, seed=5)
+    step = env.reset()
+    for _ in range(60):
+        opponent = step.hidden[:, :40].astype(bool)
+        stock = step.hidden[:, 40:] > 0
+        # Never the seat's own hand, and the stock never holds a card of either hand.
+        assert not (opponent & step.masks).any()
+        assert not (stock & (opponent | step.masks)).any()
+        assert (opponent.sum(axis=1) <= 3).all()
+        step = env.step(first_legal(step.masks))

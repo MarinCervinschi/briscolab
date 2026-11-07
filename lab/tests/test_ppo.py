@@ -6,6 +6,7 @@ from pathlib import Path
 
 import briscolab_engine
 import numpy as np
+import pytest
 import torch
 
 from briscolab_lab.env import TrainingEnv
@@ -23,19 +24,23 @@ from briscolab_lab.ppo import (
 )
 
 
-def test_the_engine_scores_cards_as_pytorch_does() -> None:
+@pytest.mark.parametrize("informed", [False, True])
+def test_the_engine_scores_cards_as_pytorch_does(informed: bool) -> None:
     torch.manual_seed(0)
-    agent = Agent(hidden=32, layers=2)
-    obs = TrainingEnv(["self", "hard"] * 8, seed=0).reset().obs
+    agent = Agent(hidden=32, layers=2, informed=informed)
+    step = TrainingEnv(["self", "hard"] * 8, seed=0).reset()
+    obs = step.obs
     with torch.no_grad():
-        expected = agent(torch.from_numpy(obs))[0].numpy()
+        expected = agent(torch.from_numpy(obs), torch.from_numpy(step.hidden))[0].numpy()
     out = briscolab_engine.network_forward(weights_bytes(agent), obs.astype("<f4").tobytes())
     engine = np.frombuffer(out, dtype="<f4").reshape(expected.shape)
     np.testing.assert_allclose(engine, expected, rtol=1e-5, atol=1e-5)
 
 
 def decision(value: float) -> Decision:
-    return Decision(np.zeros(204, np.float32), np.ones(40, np.bool_), 0, 0.0, value)
+    return Decision(
+        np.zeros(204, np.float32), np.zeros(80, np.float32), np.ones(40, np.bool_), 0, 0.0, value
+    )
 
 
 def test_without_discount_every_decision_returns_the_games_result() -> None:
@@ -81,6 +86,8 @@ def test_a_short_run_leaves_weights_the_engine_plays(tmp_path: Path) -> None:
         threads=1,
         anneal=True,
         encoding="by-seat",
+        informed_critic=True,
+        points_weight=0.5,
     )
     best = train(config, tmp_path)
     assert (tmp_path / "snapshots").is_dir()
@@ -101,8 +108,18 @@ def test_every_config_field_has_a_flag() -> None:
             "hard",
             "--encoding",
             "by-seat",
+            "--informed-critic",
+            "--points-weight",
+            "0.5",
         ]
     )
     config = config_from_args(args)
-    assert config == Config(hidden=512, anneal=True, rule_bots=("ppo", "hard"), encoding="by-seat")
+    assert config == Config(
+        hidden=512,
+        anneal=True,
+        rule_bots=("ppo", "hard"),
+        encoding="by-seat",
+        informed_critic=True,
+        points_weight=0.5,
+    )
     assert config_from_args(make_parser().parse_args(["--run-name", "x"])) == Config()

@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use briscolab_core::{
     Bot, Card, Encoding, EndgameBot, GreedyBot, HardBot, IsmctsBot, Network, Outcome, PimcBot,
-    PpoBot, RandomBot, TrainingGame, DECK_SIZE, MAX_ENCODING_LEN,
+    PpoBot, RandomBot, TrainingGame, DECK_SIZE, HIDDEN_LEN, MAX_ENCODING_LEN,
 };
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
@@ -167,8 +167,10 @@ struct VecEnv {
     next_seed: u64,
 }
 
-/// The arrays of one step: the encoded observation, the legal cards and the seat to play of every slot.
+/// The arrays of one step: the encoded observation, the legal cards, the seat to play and what that seat cannot see
+/// of every slot.
 type Observed<'py> = (
+    Bound<'py, PyBytes>,
     Bound<'py, PyBytes>,
     Bound<'py, PyBytes>,
     Bound<'py, PyBytes>,
@@ -194,6 +196,8 @@ impl VecEnv {
         let mut obs = Vec::with_capacity(n * len * 4);
         let mut masks = vec![0u8; n * DECK_SIZE];
         let mut seats = Vec::with_capacity(n);
+        let mut hidden = [0.0; HIDDEN_LEN];
+        let mut hiddens = Vec::with_capacity(n * HIDDEN_LEN * 4);
         for (i, slot) in self.slots.iter().enumerate() {
             let o = slot
                 .game
@@ -207,11 +211,16 @@ impl VecEnv {
                 masks[i * DECK_SIZE + usize::from(card.index())] = 1;
             }
             seats.push(o.player.index() as u8);
+            slot.game.game().encode_hidden(o.player, &mut hidden);
+            for x in hidden {
+                hiddens.extend_from_slice(&x.to_le_bytes());
+            }
         }
         (
             PyBytes::new(py, &obs),
             PyBytes::new(py, &masks),
             PyBytes::new(py, &seats),
+            PyBytes::new(py, &hiddens),
         )
     }
 }
@@ -272,19 +281,23 @@ impl VecEnv {
         self.encoding.inputs()
     }
 
-    /// `(observations, masks, seats)`: `float32[n, inputs]`, `uint8[n, 40]` and `uint8[n]`.
+    /// `(observations, masks, seats, hidden)`: `float32[n, inputs]`, `uint8[n, 40]`, `uint8[n]` and
+    /// `float32[n, 80]`, what the seat to play cannot see (`Game::encode_hidden`), for a critic in training only.
     fn observe<'py>(&self, py: Python<'py>) -> Observed<'py> {
         self.observed(py)
     }
 
-    /// Plays one card per slot, given as card indices, and returns what `observe` does plus `done` (`uint8[n]`) and
-    /// `rewards` (`float32[n, 2]`, +1, 0 or −1 per seat for the game that just ended, 0 otherwise).
+    /// Plays one card per slot, given as card indices, and returns what `observe` does plus `done` (`uint8[n]`),
+    /// `rewards` (`float32[n, 2]`, +1, 0 or −1 per seat for the game that just ended, 0 otherwise) and `points`
+    /// (`uint8[n, 2]`, each seat's points in that game, 0 otherwise).
     #[allow(clippy::type_complexity)]
     fn step<'py>(
         &mut self,
         py: Python<'py>,
         cards: Vec<u8>,
     ) -> PyResult<(
+        Bound<'py, PyBytes>,
+        Bound<'py, PyBytes>,
         Bound<'py, PyBytes>,
         Bound<'py, PyBytes>,
         Bound<'py, PyBytes>,
@@ -300,6 +313,7 @@ impl VecEnv {
         }
         let mut done = vec![0u8; self.slots.len()];
         let mut rewards = Vec::with_capacity(self.slots.len() * 2 * 4);
+        let mut points = vec![0u8; self.slots.len() * 2];
         for (i, &index) in cards.iter().enumerate() {
             let card = Card::from_index(index)
                 .ok_or_else(|| PyValueError::new_err(format!("game {i}: no card {index}")))?;
@@ -309,6 +323,7 @@ impl VecEnv {
                 .map_err(|e| PyValueError::new_err(format!("game {i}: {e}")))?;
             let mut reward = [0.0f32; 2];
             if let Some(outcome) = self.slots[i].game.outcome() {
+                points[i * 2..i * 2 + 2].copy_from_slice(&self.slots[i].game.game().points());
                 if let Outcome::Win(winner) = outcome {
                     reward[winner.index()] = 1.0;
                     reward[winner.next().index()] = -1.0;
@@ -327,13 +342,15 @@ impl VecEnv {
                 rewards.extend_from_slice(&r.to_le_bytes());
             }
         }
-        let (obs, masks, seats) = self.observed(py);
+        let (obs, masks, seats, hidden) = self.observed(py);
         Ok((
             obs,
             masks,
             seats,
+            hidden,
             PyBytes::new(py, &done),
             PyBytes::new(py, &rewards),
+            PyBytes::new(py, &points),
         ))
     }
 }
