@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# One night of training: the runs below, 170 minutes each, one after the other. Edit the list for each night.
+# One night of training: the runs below, one after the other, 170 minutes each unless a run sets --minutes.
+# Edit the list for each night.
 # Run from lab/ with MLFLOW_TRACKING_URI set: experiments/night.sh night-2
 set -uo pipefail
 night=${1:?give the night a name, such as night-2}
@@ -12,7 +13,5 @@ run() {
 		echo "$night-$name failed"
 }
 
-run critic --informed-critic
-run points --points-weight 0.5
-run both --informed-critic --points-weight 0.5
-run both-s1 --informed-critic --points-weight 0.5 --seed 1
+run both-long --informed-critic --points-weight 0.5 --minutes 340
+run big-anneal-long --hidden 512 --layers 3 --anneal --minutes 340
