@@ -8,6 +8,8 @@ const { count, size, warnings } = await generateSW({
 	swDest: "dist/client/sw.js",
 	// Page URLs end in a slash; the precache holds their index.html.
 	directoryIndex: "index.html",
+	// The engine's wasm holds the champion network's weights, 2.8 MB; Workbox skips files over 2 MiB by default.
+	maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
 	cleanupOutdatedCaches: true,
 	clientsClaim: true,
 	skipWaiting: true,
