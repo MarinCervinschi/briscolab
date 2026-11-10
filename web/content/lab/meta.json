@@ -8,6 +8,7 @@
 		"hard",
 		"endgame",
 		"pimc",
-		"ismcts"
+		"ismcts",
+		"ppo"
 	]
 }

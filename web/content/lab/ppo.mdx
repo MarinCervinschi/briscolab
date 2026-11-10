@@ -1,0 +1,91 @@
+---
+title: PPO
+description: Una rete neurale allenata giocando milioni di partite contro se stessa. È il livello Campione.
+---
+
+PPO è una rete neurale che sceglie la carta finché c'è il mazzo. Quando il mazzo finisce, ogni carta è nota e gioca
+il calcolo esatto, come [Endgame](/lab/endgame). Il nome viene dall'algoritmo con cui si è allenata, _proximal
+policy optimization_ (Schulman e altri, 2017).
+
+## Cosa vede
+
+Prima di ogni carta la rete legge 204 numeri, presi dall'osservazione del giocatore e da nient'altro:
+
+- cinque gruppi di 40 numeri, uno per carta del mazzo: le carte in mano, le carte sul tavolo, le carte giocate
+  nelle prese finite, le carte che sa in mano all'avversario (la briscola scoperta, se l'ha pescata lui) e la
+  briscola scoperta;
+- i propri punti e quelli dell'avversario, divisi per 120;
+- le carte rimaste da pescare, divise per 34;
+- 1 se è lei ad aprire la presa.
+
+## Com'è fatta
+
+Tre strati da 512 neuroni e uno strato finale con un numero per carta. Le carte che non può giocare vengono scartate;
+le altre diventano probabilità, e la rete gioca la più probabile. A ogni carta fa circa 650 000 moltiplicazioni. Nel
+browser, in WebAssembly, una mossa richiede meno di un millisecondo.
+
+## Come si è allenata
+
+Nessuno le ha mostrato come si gioca bene. Ha giocato partite intere e ha imparato solo dal risultato: +1 se
+vince, −1 se perde, 0 se pareggia.
+
+- **Gli avversari.** Metà delle partite contro se stessa, un terzo contro le sue versioni precedenti (le ultime 10,
+  salvate ogni 20 aggiornamenti), le altre contro [Greedy](/lab/greedy) e [Hard](/lab/hard). Le versioni
+  precedenti e i bot a regole servono a non farla specializzare contro un solo modo di giocare.
+- **L'aggiornamento.** 512 partite alla volta; ogni 32 768 carte giocate la rete si aggiorna con PPO, 4 passate in
+  blocchi da 4096. Il passo di apprendimento parte da 0,0003 e scende fino a 0 alla fine dell'allenamento.
+- **Quanto.** 340 minuti su un Mac con M4, 7,4 milioni di partite.
+
+Durante l'allenamento la rete gioca ogni tanto 1000 smazzate duplicate contro Hard e contro PIMC, sempre le stesse.
+Viene tenuta la versione che ha fatto meglio contro PIMC. Su 1000 smazzate l'intervallo è di circa ±2 punti percentuali,
+quindi la curva oscilla:
+
+| Minuti | Partite giocate | Contro Hard | Contro PIMC |
+| -----: | --------------: | ----------: | ----------: |
+|     30 |         684 360 |       61,2% |       46,4% |
+|     60 |       1 298 760 |       68,6% |       50,7% |
+|    120 |       2 604 360 |       71,9% |       55,7% |
+|    180 |       3 909 960 |       74,6% |       56,5% |
+|    240 |       5 215 560 |       75,0% |       59,4% |
+|    340 |       7 442 760 |       75,6% |       59,6% |
+
+Arriva alla pari con PIMC dopo circa un'ora. Dopo quattro ore la curva contro PIMC sale solo di pochi decimi.
+
+## Cosa non ha funzionato
+
+Ogni idea è stata misurata nell'arena contro la rete campione del momento, una rete più piccola con due strati da
+256 neuroni. Nessuna di queste l'ha battuta:
+
+| Idea                                                                 | Smazzate | Punteggio della rete campione |
+| -------------------------------------------------------------------- | -------: | ----------------------------: |
+| PIMC che nelle simulazioni gioca con la rete, 30 smazzate immaginate |   10 000 |            57,1% [56,4, 57,7] |
+| Lo stesso, 100 smazzate immaginate                                   |     1000 |            54,4% [52,4, 56,5] |
+| La rete propone due carte, PIMC sceglie tra quelle                   |     2000 |  50,4% [49,0, 51,9], pareggio |
+| Un critico che vede anche le carte nascoste (solo in allenamento)    |   10 000 |            52,6% [52,0, 53,3] |
+| Metà ricompensa dal risultato, metà dalla differenza di punti        |   10 000 |            50,8% [50,1, 51,4] |
+| Le due idee insieme, 340 minuti                                      |   10 000 |  50,0% [49,3, 50,6], pareggio |
+
+Sulle carte dove la rete è incerta, PIMC non sceglie meglio di lei, quindi la ricerca sopra la rete non aiuta.
+Il premio sui punti non ha portato più vittorie. Ha funzionato solo una rete più grande allenata più a
+lungo: tre strati da 512, con il passo di apprendimento che scende fino a 0, batte la rete precedente 51,8%
+[51,2, 52,5] su 10 000 smazzate duplicate.
+
+## Sul sito
+
+È il livello Campione. La rete gira nel browser, in un Web Worker, con gli stessi pesi usati nell'arena. Il
+ragionamento mostra cosa vede, i neuroni più attivi di ogni strato e la probabilità che dà a ogni carta.
+
+## Nell'arena
+
+Su 10 000 smazzate duplicate per coppia batte tutti gli altri bot:
+
+| Contro  | Punteggio di PPO   | Scarto per partita |
+| ------- | ------------------ | ------------------ |
+| Random  | 93,9% [93,5, 94,2] | +47,6 punti        |
+| Greedy  | 73,8% [73,2, 74,4] | +15,4 punti        |
+| Hard    | 76,7% [76,1, 77,3] | +17,6 punti        |
+| Endgame | 70,1% [69,5, 70,7] | +12,6 punti        |
+| PIMC    | 59,7% [59,1, 60,4] | +5,3 punti         |
+| ISMCTS  | 59,7% [59,1, 60,4] | +5,4 punti         |
+
+<VersusChampion run="ppo" />
